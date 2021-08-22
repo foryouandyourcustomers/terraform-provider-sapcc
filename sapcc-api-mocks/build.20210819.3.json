@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/fake-subscrription-123/builds/20210819.3"
+  },
+  "response": {
+    "body": {
+      "subscriptionCode": "fake-subscrription-123",
+      "applicationCode": "commerce-cloud",
+      "applicationDefinitionVersion": "a0000",
+      "branch": "main",
+      "name": "sapcc-build-1836",
+      "code": "20210819.3",
+      "buildStartTimestamp": "2021-08-19T09:12:45.610Z",
+      "buildEndTimestamp": "2021-08-19T09:13:54.796Z",
+      "buildVersion": "0000.0-1111-20210819.3-10kk000-main",
+      "createdBy": "S0000000000",
+      "status": "SUCCESS",
+      "properties": [
+        {
+          "key": "project.repository.revision",
+          "value": "10kk000"
+        },
+        {
+          "key": "product.version",
+          "value": "0000.0-1111"
+        }
+      ]
+    }
+  }
+}

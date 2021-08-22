@@ -1,0 +1,120 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/fake-subscrription-123/deployments"
+  },
+  "response": {
+    "body": {
+      "value": [
+        {
+          "code": "200000",
+          "subscriptionCode": "fake-subscrription-123",
+          "createdBy": "S0000000000",
+          "createdTimestamp": "2021-08-19T13:35:03.723Z",
+          "buildCode": "20210819.3",
+          "environmentCode": "s1",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "2021-08-19T13:35:02.000Z",
+          "deployedTimestamp": "2021-08-19T13:41:04.183Z",
+          "failedTimestamp": null,
+          "undeployedTimestamp": null,
+          "status": "DEPLOYED",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        {
+          "code": "300000",
+          "subscriptionCode": "fake-subscrription-123",
+          "createdBy": "S0000000000",
+          "createdTimestamp": "2021-08-19T13:04:52.869Z",
+          "buildCode": "20210819.2",
+          "environmentCode": "s1",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "2021-08-19T13:04:51.000Z",
+          "deployedTimestamp": "2021-08-19T13:13:36.060Z",
+          "failedTimestamp": null,
+          "undeployedTimestamp": "2021-08-19T13:41:04.183Z",
+          "status": "UNDEPLOYED",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        {
+          "code": "400000",
+          "subscriptionCode": "fake-subscrription-123",
+          "createdBy": "S0000000000",
+          "createdTimestamp": "2021-08-19T10:36:18.786Z",
+          "buildCode": "20210819.3",
+          "environmentCode": "s1",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "2021-08-19T10:36:17.000Z",
+          "deployedTimestamp": "2021-08-19T10:54:16.373Z",
+          "failedTimestamp": null,
+          "undeployedTimestamp": "2021-08-19T13:13:36.060Z",
+          "status": "UNDEPLOYED",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        {
+          "code": "500000",
+          "subscriptionCode": "fake-subscrription-123",
+          "createdBy": "S0000000000",
+          "createdTimestamp": "2021-08-19T09:57:16.678Z",
+          "buildCode": "20210809.6",
+          "environmentCode": "s1",
+          "databaseUpdateMode": "NONE",
+          "strategy": "RECREATE",
+          "scheduledTimestamp": "2021-08-19T09:57:16.000Z",
+          "deployedTimestamp": "2021-08-19T10:10:09.773Z",
+          "failedTimestamp": null,
+          "undeployedTimestamp": "2021-08-19T10:54:16.373Z",
+          "status": "UNDEPLOYED",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        {
+          "code": "600000",
+          "subscriptionCode": "fake-subscrription-123",
+          "createdBy": "S0000000000",
+          "createdTimestamp": "2021-08-18T18:12:16.676Z",
+          "buildCode": "20210809.6",
+          "environmentCode": "s1",
+          "databaseUpdateMode": "NONE",
+          "strategy": "RECREATE",
+          "scheduledTimestamp": "2021-08-18T18:12:16.000Z",
+          "deployedTimestamp": null,
+          "failedTimestamp": "2021-08-18T18:15:32.367Z",
+          "undeployedTimestamp": null,
+          "status": "FAIL",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": {
+            "canceledBy": "S0000000000",
+            "startTimestamp": "2021-08-18T18:15:32.081Z",
+            "finishedTimestamp": "2021-08-18T18:15:51.576Z",
+            "failed": false,
+            "rollbackDatabase": false,
+            "cancelReason": "TESTING_ONLY"
+          }
+        }
+      ],
+      "count": 90
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/fake-subscrription-123/deployments/300000"
+  },
+  "response": {
+    "body": {
+      "code": "300000",
+      "subscriptionCode": "fake-subscrription-123",
+      "createdBy": "S0000000000",
+      "createdTimestamp": "2021-08-19T13:04:52.869Z",
+      "buildCode": "20210819.2",
+      "environmentCode": "s1",
+      "databaseUpdateMode": "NONE",
+      "strategy": "ROLLING_UPDATE",
+      "scheduledTimestamp": "2021-08-19T13:04:51.000Z",
+      "deployedTimestamp": "2021-08-19T13:13:36.060Z",
+      "failedTimestamp": null,
+      "undeployedTimestamp": "2021-08-19T13:41:04.183Z",
+      "status": "UNDEPLOYED",
+      "canceledBy": null,
+      "canceledTimestamp": null,
+      "cancellationFinishedTimestamp": null,
+      "cancellationFailed": null,
+      "cancelation": null
+    }
+  }
+}

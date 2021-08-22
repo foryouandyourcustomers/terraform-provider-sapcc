@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/fake-subscrription-123/builds/20210820.1"
+  },
+  "response": {
+    "body": {
+      "subscriptionCode": "fake-subscrription-123",
+      "applicationCode": "commerce-cloud",
+      "applicationDefinitionVersion": "a0000",
+      "branch": "feature/cherry-pie",
+      "name": "sapcc-build-1875",
+      "code": "20210820.1",
+      "buildStartTimestamp": "2021-08-20T07:30:48.633Z",
+      "buildEndTimestamp": "2021-08-20T07:31:59.649Z",
+      "buildVersion": "0000.0-1111-20210820.1-88886ef-feature/cherry-pie",
+      "createdBy": "S0000000000",
+      "status": "SUCCESS",
+      "properties": [
+        {
+          "key": "project.repository.revision",
+          "value": "88886ef"
+        },
+        {
+          "key": "product.version",
+          "value": "0000.0-1111"
+        }
+      ]
+    }
+  }
+}

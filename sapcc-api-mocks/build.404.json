@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/fake-subscrription-123/builds/00000000.0"
+  },
+  "response": {
+    "statusCode": 404
+  }
+}
