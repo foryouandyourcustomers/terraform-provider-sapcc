@@ -1,0 +1,23 @@
+{
+  "subscriptionCode": "{{request.pathSegments.[0]}}",
+  "applicationCode": "commerce-cloud",
+  "applicationDefinitionVersion": "a0000",
+  "branch": "{{{pickRandom 'main' 'feature/my-craZy-branch'}}}",
+  "name": "ci-build-{{randomInt lower=100 upper=500}}",
+  "code": "{{request.pathSegments.[2]}}",
+  "buildStartTimestamp": "{{now offset='-1 hours' format='yyyy-MM-dd HH:mm:ssZ'}}",
+  "buildEndTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+  "buildVersion": "0000.0-1111-20210819.3-10kk000-main",
+  "createdBy": "S{{randomInt lower=10000000 upper=99999999}}",
+  "status": "{{{pickRandom 'SUCCESS' 'FAIL' 'CANCELLED'}}}",
+  "properties": [
+    {
+      "key": "project.repository.revision",
+      "value": "{{randomValue length=7 type='ALPHABETIC' uppercase=false}}"
+    },
+    {
+      "key": "product.version",
+      "value": "0000.0-1111"
+    }
+  ]
+}

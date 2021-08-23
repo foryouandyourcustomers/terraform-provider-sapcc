@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/([a-zA-Z0-9]*)/builds/.*"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "build.json",
+    "transformers": ["response-template"],
+    "delayDistribution": {
+      "type": "lognormal",
+      "median": 95,
+      "sigma": 0.95
+    }
+  }
+}

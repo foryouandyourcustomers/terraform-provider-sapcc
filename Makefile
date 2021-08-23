@@ -13,13 +13,13 @@ default: install
 all: test install release
 test: start-sapcc-mock go-test stop-sapcc-mock
 
+
 start-mock:
-	docker run --name sapcc-api  -d -p 3030:3030 -v ${PWD}/sapcc-api-mocks:/app/mocks dotronglong/faker:stable
-	@echo "Mock SAP Commerce Api Server available at http://localhost:3030"
+	docker run --rm -d -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
+	@echo "Mock SAP Commerce Api Server available at http://localhost:8080"
 
 stop-mock:
-	docker kill sapcc-api
-	docker rm sapcc-api
+	docker kill wiremock
 
 restart-mock: stop-mock start-mock
 

@@ -10,13 +10,13 @@ terraform {
 }
 
 provider "sapcc" {
-  api_baseurl     = "http://localhost:3030"
+  api_baseurl     = "http://localhost:8080"
   auth_token      = "xxxx"
-  subscription_id = "fake-subscrription-123"
+  subscription_id = "myfakesubcription123"
 }
 
 data "sapcc_build" "random_build_1" {
-  code = "20210819.3"
+  code = "20210819"
 }
 
 data "sapcc_deployment" "random_deployment" {

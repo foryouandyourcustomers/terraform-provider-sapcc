@@ -1,0 +1,20 @@
+{
+  "code": "{{request.pathSegments.[2]}}",
+  "subscriptionCode": "{{request.pathSegments.[0]}}",
+  "createdBy": "S{{randomInt lower=10000000 upper=99999999}}",
+  "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+  "buildCode": "{{now format='yyyyMMdd'}}.{{randomInt lower=1 upper=5000}}",
+  "environmentCode": "{{{pickRandom 'd1' 's1' 'p1'}}}",
+  "databaseUpdateMode": "{{{pickRandom 'NONE' 'UPDATE' 'UNDEPLOYED' 'INITIALIZE'}}}",
+  "strategy": "{{{pickRandom 'ROLLING_UPDATE' 'RECREATE'}}}",
+  "scheduledTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+  "deployedTimestamp": null,
+  "failedTimestamp": null,
+  "undeployedTimestamp": null,
+  "status":  "{{{pickRandom 'SCHEDULED' 'DEPLOYING' 'UNDEPLOYED' 'FAIL'}}}",
+  "canceledBy": null,
+  "canceledTimestamp": null,
+  "cancellationFinishedTimestamp": null,
+  "cancellationFailed": null,
+  "cancelation": null
+}

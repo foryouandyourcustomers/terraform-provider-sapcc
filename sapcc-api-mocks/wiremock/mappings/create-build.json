@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/([a-zA-Z0-9]*)/builds"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody" : {
+      "code": "{{now format='yyyyMMdd'}}.{{randomInt lower=1 upper=5000}}"
+    },
+    "transformers": ["response-template"],
+    "delayDistribution": {
+      "type": "lognormal",
+      "median": 95,
+      "sigma": 0.95
+    }
+  }
+}
