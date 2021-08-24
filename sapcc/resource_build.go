@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -17,9 +16,9 @@ import (
 type resourceDeploymentType struct{}
 
 // resourceDeploymentType Resource schema
-func (r resourceDeploymentType) GetSchema(_ context.Context) (schema.Schema, []*tfprotov6.Diagnostic) {
-	return schema.Schema{
-		Attributes: map[string]schema.Attribute{
+func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
+	return tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id of the user who created this build.",
 				Type:        types.StringType,
@@ -105,7 +104,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (schema.Schema, []*
 				//FIXME: This is a possible bug in the framework:
 				// we expect here schema.SingleNestedAttributes but we use a List as workaround
 				// https://github.com/hashicorp/terraform-plugin-framework/issues/112
-				Attributes: schema.ListNestedAttributes(map[string]schema.Attribute{
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 					"canceled_by": {
 						Description: "The UserId of the user who cancelled the deployment.",
 						Type:        types.StringType,
@@ -136,7 +135,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (schema.Schema, []*
 						Computed:    true,
 						Required:    true,
 					},
-				}, schema.ListNestedAttributesOptions{}),
+				}, tfsdk.ListNestedAttributesOptions{}),
 			},
 		},
 	}, nil
@@ -166,13 +165,8 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 
 	// Retrieve values from plan
 	var plan Deployment
-	err := req.Config.Get(ctx, &plan)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error reading plan",
-			Detail:   "An unexpected error was encountered while reading the plan: " + err.Error(),
-		})
+	for _, d := range req.Config.Get(ctx, &plan) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 
@@ -267,13 +261,8 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 		EnvironmentCode:    types.String{Value: plan.EnvironmentCode.Value},
 		Strategy:           types.String{Value: plan.Strategy.Value},
 	}
-	err = resp.State.Set(ctx, result)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error setting state",
-			Detail:   "Could not set state, unexpected error: " + err.Error(),
-		})
+	for _, d := range resp.State.Set(ctx, result) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 }
@@ -282,27 +271,13 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
 	// Retrieve values from plan
 	var state Deployment
-	err := req.State.Get(ctx, &state)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityWarning,
-			Summary:  "Error reading plan",
-			Detail:   "An unexpected error was encountered while reading the plan: " + err.Error(),
-		})
+	for _, d := range req.State.Get(ctx, &state) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 
 	if state.Code.Unknown || state.Code.Null {
 		// this means the resource hasn't yet to be created - silently return
-		if err != nil {
-			resp.Diagnostics = append(resp.Diagnostics,
-				&tfprotov6.Diagnostic{
-					Severity: tfprotov6.DiagnosticSeverityError,
-					Summary:  "Error setting state",
-					Detail:   "Unexpected error encountered trying to set new state: " + err.Error(),
-				})
-			return
-		}
 
 	} else {
 		// TODO: this can already be moved to a separate http client
@@ -434,13 +409,8 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 		}
 
 		state := deployment
-		err = resp.State.Set(ctx, &state)
-		if err != nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  "Error setting state",
-				Detail:   "Could not set state, unexpected error: " + err.Error(),
-			})
+		for _, d := range resp.State.Set(ctx, &state) {
+			resp.Diagnostics = append(resp.Diagnostics, d)
 			return
 		}
 	}

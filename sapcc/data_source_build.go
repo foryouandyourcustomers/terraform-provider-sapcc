@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -14,9 +13,9 @@ import (
 
 type dataSourceBuildType struct{}
 
-func (r dataSourceBuildType) GetSchema(_ context.Context) (schema.Schema, []*tfprotov6.Diagnostic) {
-	return schema.Schema{
-		Attributes: map[string]schema.Attribute{
+func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
+	return tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id pf the user who created this build.",
 				Type:        types.StringType,
@@ -87,7 +86,7 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (schema.Schema, []*tfp
 				Description: "List of properties associated with this build.",
 				Computed:    true,
 				Optional:    true,
-				Attributes: schema.ListNestedAttributes(map[string]schema.Attribute{
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 					"key": {
 						Description: "Key of the property.",
 						Type:        types.StringType,
@@ -100,7 +99,7 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (schema.Schema, []*tfp
 						Computed:    true,
 						Required:    true,
 					},
-				}, schema.ListNestedAttributesOptions{}),
+				}, tfsdk.ListNestedAttributesOptions{}),
 			},
 		},
 	}, nil
@@ -129,12 +128,8 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 	// Declare struct that this function will set to this data source's state
 	var build Build
 
-	err := req.Config.Get(ctx, &build)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error reading Datasource %s", err),
-		})
+	for _, d := range req.Config.Get(ctx, &build) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 
@@ -250,13 +245,8 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 	fmt.Fprintf(stderr, "\n[DEBUG]-Resource State Build:%+v", build)
 
 	// Set state
-	err = resp.State.Set(ctx, &build)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error reading build",
-			Detail:   fmt.Sprintf("An unexpected error was encountered while reading the datasource_build: %+v", err.Error()),
-		})
+	for _, d := range resp.State.Set(ctx, &build) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 }

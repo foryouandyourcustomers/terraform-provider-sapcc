@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -14,9 +13,9 @@ import (
 
 type dataSourceDeploymentType struct{}
 
-func (r dataSourceDeploymentType) GetSchema(_ context.Context) (schema.Schema, []*tfprotov6.Diagnostic) {
-	return schema.Schema{
-		Attributes: map[string]schema.Attribute{
+func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
+	return tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id of the user who created this build.",
 				Type:        types.StringType,
@@ -102,7 +101,7 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (schema.Schema, [
 				//FIXME: This is a possible bug in the framework:
 				// we expect here schema.SingleNestedAttributes but we use a List as workaround
 				// https://github.com/hashicorp/terraform-plugin-framework/issues/112
-				Attributes: schema.ListNestedAttributes(map[string]schema.Attribute{
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 					"canceled_by": {
 						Description: "The UserId of the user who cancelled the deployment.",
 						Type:        types.StringType,
@@ -133,7 +132,7 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (schema.Schema, [
 						Computed:    true,
 						Optional:    true,
 					},
-				}, schema.ListNestedAttributesOptions{}),
+				}, tfsdk.ListNestedAttributesOptions{}),
 			},
 		},
 	}, nil
@@ -162,14 +161,11 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 	// Declare struct that this function will set to this data source's state
 	var deployment Deployment
 
-	err := req.Config.Get(ctx, &deployment)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error reading Datasource %s", err),
-		})
+	for _, d := range req.Config.Get(ctx, &deployment) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
+
 	fmt.Fprintf(stderr, "[DEBUG] deployment %s\n", deployment.Code.Value)
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -298,14 +294,10 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 
 	}
 	fmt.Fprintf(stderr, "\n[DEBUG]-Resource State deployment:%+v", deployment)
+
 	// Set state
-	err = resp.State.Set(ctx, &deployment)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error reading build",
-			Detail:   fmt.Sprintf("An unexpected error was encountered while reading the datasource_build: %+v", err.Error()),
-		})
+	for _, d := range resp.State.Set(ctx, &deployment) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 }

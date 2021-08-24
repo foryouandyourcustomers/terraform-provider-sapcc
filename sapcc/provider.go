@@ -3,12 +3,10 @@ package sapcc
 import (
 	"context"
 	"fmt"
-	"os"
-
-	"github.com/hashicorp/terraform-plugin-framework/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"os"
 )
 
 var stderr = os.Stderr
@@ -34,9 +32,9 @@ type providerData struct {
 }
 
 // GetSchema returns the schema for the provider
-func (p *provider) GetSchema(_ context.Context) (schema.Schema, []*tfprotov6.Diagnostic) {
-	return schema.Schema{
-		Attributes: map[string]schema.Attribute{
+func (p *provider) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
+	return tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"auth_token": {
 				Description: "The AuthToken for accessing SAP Commerce Cloud API",
 				Type:        types.StringType,
@@ -62,13 +60,9 @@ func (p *provider) GetSchema(_ context.Context) (schema.Schema, []*tfprotov6.Dia
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
 	// Retrieve provider data from configuration
 	var config providerData
-	err := req.Config.Get(ctx, &config)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error parsing configuration",
-			Detail:   "Error parsing the configuration, this is an error in the provider. Please report the following to the provider developer:\n\n" + err.Error(),
-		})
+
+	for _, d := range req.Config.Get(ctx, &config) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 
@@ -134,7 +128,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 // GetResources - Defines provider resources
 func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceType, []*tfprotov6.Diagnostic) {
 	return map[string]tfsdk.ResourceType{
-		"sapcc_deployment" : resourceDeploymentType{},
+		"sapcc_deployment": resourceDeploymentType{},
 	}, nil
 }
 
