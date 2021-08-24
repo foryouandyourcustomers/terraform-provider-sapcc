@@ -1,0 +1,23 @@
+---
+layout: ""
+page_title: "SAP Commerce Cloud Provider"
+description: |-
+  The SAP Commerce Cloud Provider provides resources and data sources for interacting with SAP Commerce Cloud API.
+---
+
+# SAP Commerce Cloud Provider
+
+_Note: The provider is still development and is in `alpha` state. The provider is not ready to be used in Production._
+
+The SAP Commerce Cloud Provider provides resources and data sources for interacting with SAP Commerce Cloud API.
+
+Currently only limited functionality is supported:
+   - Fetching the SAPCC build
+   - Fetching and Creating SAPCC Deployment
+
+
+## Example Usage
+
+{{tffile "examples/provider/provider.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}

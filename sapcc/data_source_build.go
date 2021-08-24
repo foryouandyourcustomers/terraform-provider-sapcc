@@ -15,9 +15,10 @@ type dataSourceBuildType struct{}
 
 func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
+		Description: "Fetches the current build details for the provided `code`",
 		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
-				Description: "The User Id pf the user who created this build.",
+				Description: "The S-user Id of the user who created this build.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
@@ -29,7 +30,7 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfpr
 				Optional:    true,
 			},
 			"application_code": {
-				Description: "The Application code for the build.",
+				Description: "The application code for the build.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
@@ -41,13 +42,13 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfpr
 				Optional:    true,
 			},
 			"branch": {
-				Description: "Name of the source branch used for creating the build.",
+				Description: "The name of the source branch used for creating the build.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
 			},
 			"name": {
-				Description: "Name of the build used when it was created.",
+				Description: "The name of the build used when it was created.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
@@ -59,25 +60,25 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfpr
 				Required:    true,
 			},
 			"build_start_timestamp": {
-				Description: "Build start timestamp in UTC.",
+				Description: "The timestamp when the build was started.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
 			},
 			"build_end_timestamp": {
-				Description: "Build end timestamp in UTC.",
+				Description: "The timestamp when the build was ended.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
 			},
 			"build_version": {
-				Description: "Build version.",
+				Description: "The full build version.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
 			},
 			"status": {
-				Description: "Status of the Build.",
+				Description: "The final status of this build.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,

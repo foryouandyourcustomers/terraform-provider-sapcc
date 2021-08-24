@@ -15,6 +15,7 @@ type dataSourceDeploymentType struct{}
 
 func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
+		Description: "Fetches the details of the deployment.",
 		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id of the user who created this build.",

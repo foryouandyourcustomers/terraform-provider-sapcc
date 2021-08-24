@@ -36,22 +36,23 @@ func (p *provider) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diag
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"auth_token": {
-				Description: "The AuthToken for accessing SAP Commerce Cloud API",
+				Description: "The authentication token for accessing SAP Commerce Cloud API. Can be specified with the `SAPCC_AUTH_TOKEN` environment variable.",
 				Type:        types.StringType,
 				Optional:    true,
 				Sensitive:   true,
-				Computed:    true,
+				Computed:    false,
 			},
 			"subscription_id": {
-				Description: "The Subscription Id associated with the SAP Commerce Cloud.",
+				Description: "The subscription Id associated with the SAP Commerce Cloud. Can be specified with the `SAPCC_SUBSCRIPTION_ID` environment variable.",
 				Type:        types.StringType,
 				Optional:    true,
-				Computed:    true,
+				Computed:    false,
 			},
 			"api_baseurl": {
-				Type:     types.StringType,
-				Optional: true,
-				Computed: true,
+				Description: "The base api url Subscription url for SAP Commerce Cloud API. Default: `https://portalrotapi.hana.ondemand.com/v2/subscriptions",
+				Type:        types.StringType,
+				Optional:    true,
+				Computed:    false,
 			},
 		},
 	}, nil

@@ -18,6 +18,7 @@ type resourceDeploymentType struct{}
 // resourceDeploymentType Resource schema
 func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
+		Description: "Creates & triggers a deployment for SAP Commerce Cloud.",
 		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id of the user who created this build.",
