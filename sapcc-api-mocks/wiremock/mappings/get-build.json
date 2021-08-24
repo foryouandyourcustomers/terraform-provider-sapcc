@@ -1,11 +1,34 @@
 {
+  "priority":1,
   "request": {
     "method": "GET",
-    "urlPathPattern": "/([a-zA-Z0-9]*)/builds/.*"
+    "urlPathPattern": "/([a-zA-Z0-9]*)/builds/000000.0"
   },
   "response": {
     "status": 200,
-    "bodyFileName" : "build.json",
+    "jsonBody" : {
+      "subscriptionCode": "{{request.pathSegments.[0]}}",
+      "applicationCode": "commerce-cloud",
+      "applicationDefinitionVersion": "a0000",
+      "branch": "main",
+      "name": "ci-build-0",
+      "code": "000000.0",
+      "buildStartTimestamp": "{{now offset='-1 hours' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "buildEndTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "buildVersion": "0000.0-1111-20210819.3-10kk000-main",
+      "createdBy": "S{{randomInt lower=10000000 upper=99999999}}",
+      "status": "{{{pickRandom 'SUCCESS' 'FAIL' 'CANCELLED'}}}",
+      "properties": [
+        {
+          "key": "project.repository.revision",
+          "value": "{{randomValue length=7 type='ALPHABETIC' uppercase=false}}"
+        },
+        {
+          "key": "product.version",
+          "value": "0000.0-1111"
+        }
+      ]
+    },
     "transformers": ["response-template"],
     "delayDistribution": {
       "type": "lognormal",

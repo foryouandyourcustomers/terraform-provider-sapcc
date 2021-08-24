@@ -1,11 +1,31 @@
 {
+  "priority":1,
   "request": {
     "method": "GET",
-    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/([a-zA-Z0-9\\.]*)"
+    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/000000"
   },
   "response": {
     "status": 200,
-    "bodyFileName" : "deployment.json",
+    "jsonBody" : {
+      "code": "000000",
+      "subscriptionCode": "{{request.pathSegments.[0]}}",
+      "createdBy": "S{{randomInt lower=10000000 upper=99999999}}",
+      "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "buildCode": "000000.0",
+      "environmentCode": "d0",
+      "databaseUpdateMode": "NONE",
+      "strategy": "ROLLING_UPDATE",
+      "scheduledTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "deployedTimestamp": null,
+      "failedTimestamp": null,
+      "undeployedTimestamp": null,
+      "status":  "{{{pickRandom 'SCHEDULED' 'DEPLOYING'}}}",
+      "canceledBy": null,
+      "canceledTimestamp": null,
+      "cancellationFinishedTimestamp": null,
+      "cancellationFailed": null,
+      "cancelation": null
+    },
     "transformers": ["response-template"],
     "delayDistribution": {
       "type": "lognormal",

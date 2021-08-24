@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/([a-zA-Z0-9\\.]*)"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "deployment.json",
+    "transformers": ["response-template"],
+    "delayDistribution": {
+      "type": "lognormal",
+      "median": 95,
+      "sigma": 0.95
+    }
+  }
+}

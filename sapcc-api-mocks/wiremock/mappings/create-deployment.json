@@ -1,14 +1,27 @@
 {
+  "priority": 1,
   "request": {
     "method": "POST",
-    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments"
+    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "buildCode": "000000.0",
+          "databaseUpdateMode": "NONE",
+          "environmentCode": "d0",
+          "strategy": "ROLLING_UPDATE"
+        }
+      }
+    ]
   },
   "response": {
     "status": 200,
-     "jsonBody": {
-       "code": "{{randomInt lower=100000 upper=999999}}"
-     },
-    "transformers": ["response-template"],
+    "jsonBody": {
+      "code": "000000"
+    },
+    "transformers": [
+      "response-template"
+    ],
     "delayDistribution": {
       "type": "lognormal",
       "median": 95,

@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments"
+  },
+  "response": {
+    "status": 200,
+     "jsonBody": {
+       "code": "{{randomInt lower=100000 upper=999999}}"
+     },
+    "transformers": ["response-template"],
+    "delayDistribution": {
+      "type": "lognormal",
+      "median": 95,
+      "sigma": 0.95
+    }
+  }
+}

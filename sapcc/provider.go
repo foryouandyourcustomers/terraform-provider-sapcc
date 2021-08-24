@@ -133,7 +133,9 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 
 // GetResources - Defines provider resources
 func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceType, []*tfprotov6.Diagnostic) {
-	return map[string]tfsdk.ResourceType{}, nil
+	return map[string]tfsdk.ResourceType{
+		"sapcc_deployment" : resourceDeploymentType{},
+	}, nil
 }
 
 // GetDataSources - Defines provider data sources

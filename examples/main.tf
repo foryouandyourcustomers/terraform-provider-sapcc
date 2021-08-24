@@ -2,7 +2,7 @@ terraform {
   required_providers {
     sapcc = {
       version = "~> 0.0.1"
-      source  = "fyayc/sapcc"
+      source = "fyayc/sapcc"
     }
 
   }
@@ -10,8 +10,8 @@ terraform {
 }
 
 provider "sapcc" {
-  api_baseurl     = "http://localhost:8080"
-  auth_token      = "xxxx"
+  api_baseurl = "http://localhost:8080"
+  auth_token = "xxxx"
   subscription_id = "myfakesubcription123"
 }
 
@@ -20,8 +20,17 @@ data "sapcc_build" "random_build_1" {
 }
 
 data "sapcc_deployment" "random_deployment" {
-  code = "200000"
+  code = "deploy"
 }
+
+resource "sapcc_deployment" "random_deployment" {
+  // this is buildcode gives consistent results
+  build_code = "000000.0"
+  environment_code = "d0"
+  strategy = "ROLLING_UPDATE"
+  database_update_mode = "NONE"
+}
+
 
 output "build" {
   value = data.sapcc_build.random_build_1
@@ -29,4 +38,7 @@ output "build" {
 
 output "deploy" {
   value = data.sapcc_deployment.random_deployment
+}
+output "deploy2" {
+  value = sapcc_deployment.random_deployment
 }
