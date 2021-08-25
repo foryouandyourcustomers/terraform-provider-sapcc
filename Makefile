@@ -6,19 +6,17 @@ HOST=registry.terraform.io
 NAMESPACE=fyayc
 NAME=sapcc
 BINARY=terraform-provider-${NAME}
-PKG_NAME=${NAMESPACE}/${NAME}
-
 VERSION=0.0.1
 OS_ARCH=darwin_amd64
 
-default: install
+default: build
 
-.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt
-all: test install release
-test: start-sapcc-mock go-test stop-sapcc-mock
+.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs
+all: test build install
 
 run-mock:
 	docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
+
 start-mock:
 	docker run --rm -d -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
 	@echo "Mock SAP Commerce Api Server available at http://localhost:8080"
@@ -32,7 +30,7 @@ clean:
 	@echo "Cleaning up binaries"
 	rm -fr ./bin
 
-build:
+just-build:
 	mkdir -p bin
 	go build -o bin/${BINARY}
 
@@ -50,28 +48,22 @@ release:
 	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386
 	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
 
-install: build
+install: just-build
 	mkdir -p ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	rm -f ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
 	cp ./bin/${BINARY} ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
-
-gen-doc:
-	go generate
-
-go-test:
+test:
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
-go-testacc:
+testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-website:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(PWD) PROVIDER_NAME=$(PKG_NAME)
+docs:
+	go generate
+
+build: just-build docs

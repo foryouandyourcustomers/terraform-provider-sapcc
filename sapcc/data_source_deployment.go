@@ -15,7 +15,7 @@ type dataSourceDeploymentType struct{}
 
 func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
-		Description: "Fetches the details of the deployment.",
+		Description: "Fetches the  Commerce Cloud deployment details for the provided deployment `code`. More information on the configuration parameters at [getDeployment api](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/d86d3539bd284410bc83817297a117ac.html)",
 		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id of the user who created this build.",
@@ -226,7 +226,7 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 		return
 	}
 
-	deploymentResponse := make(map[string]interface{}, 0)
+	deploymentResponse := make(map[string]interface{})
 	err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{

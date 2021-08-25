@@ -18,7 +18,7 @@ type resourceDeploymentType struct{}
 // resourceDeploymentType Resource schema
 func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
-		Description: "Creates & triggers a deployment for SAP Commerce Cloud.",
+		Description: "Creates & triggers a deployment for SAP Commerce Cloud. More information on the configuration parameters at [createDeployment api](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/d80fd1dbefff4b8bbbbac66822d4a038.html)",
 		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The User Id of the user who created this build.",
@@ -216,13 +216,13 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 	case 401:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id' "),
+			Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
 		})
 		return
 	case 403:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Forbidden, can not access build"),
+			Summary:  "Forbidden, can not access build",
 		})
 		return
 	case 200:
@@ -235,7 +235,7 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 		return
 	}
 
-	deploymentResponse := make(map[string]interface{}, 0)
+	deploymentResponse := make(map[string]interface{})
 	err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
@@ -341,7 +341,7 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 			return
 		}
 
-		deploymentResponse := make(map[string]interface{}, 0)
+		deploymentResponse := make(map[string]interface{})
 		err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
 		if err != nil {
 			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
@@ -425,7 +425,6 @@ func (r resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResource
 		Summary:  "Not implemented",
 		Detail:   "Update of the deployment is not supported yet.",
 	})
-	return
 }
 
 // Delete resource
@@ -435,5 +434,4 @@ func (r resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResource
 		Summary:  "Not implemented",
 		Detail:   "Deleting/Rollback of the deployment is not supported yet.",
 	})
-	return
 }

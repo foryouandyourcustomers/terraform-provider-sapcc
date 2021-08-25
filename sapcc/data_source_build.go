@@ -15,7 +15,7 @@ type dataSourceBuildType struct{}
 
 func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
-		Description: "Fetches the current build details for the provided `code`",
+		Description: "Fetches the  Commerce Cloud build details for the provided build `code`. More information on the configuration parameters at [getBuild api](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/9041daaf93c144acb4726f0c86e58337.html)",
 		Attributes: map[string]tfsdk.Attribute{
 			"created_by": {
 				Description: "The S-user Id of the user who created this build.",
@@ -191,7 +191,7 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 		return
 	}
 
-	buildResponse := make(map[string]interface{}, 0)
+	buildResponse := make(map[string]interface{})
 	err = json.NewDecoder(res.Body).Decode(&buildResponse)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
