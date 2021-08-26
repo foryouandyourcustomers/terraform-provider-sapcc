@@ -1,0 +1,34 @@
+---
+
+# For possible options run »golangci-lint linters«.
+linters:
+  # NB This only enables *additional* linters that are not enabled by default.
+  enable:
+    - gofmt
+    # Goimports does everything that gofmt does. Additionally it checks unused
+    # imports.
+    - goimports
+    # Reports long lines.
+    - lll
+    # revive differs from gofmt. Gofmt reformats Go source code, whereas golint
+    # points out style mistakes.
+    - revive
+    # exportloopref checks for unpinned variables in Go programs.
+    - exportloopref
+    # Like the front-end of a Go compiler, parses and type-checks Go code.
+    - typecheck
+    # Stylecheck is a replacement for golint.
+    - stylecheck
+    # Remove unnecessary type conversions.
+    - unconvert
+    # Tool for detection of leading and trailing whitespace.
+    - whitespace
+    # Finds slice declarations that could potentially be preallocated.
+    - prealloc
+    # Reports unused function parameters.
+    - unparam
+    # Whitespace Linter - Forces you to use empty lines!
+    - wsl
+
+issues:
+  exclude-use-default: no

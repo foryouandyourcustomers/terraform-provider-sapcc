@@ -10,7 +10,8 @@ OS_ARCH=darwin_amd64
 
 default: build
 
-.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs
+.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs \
+	lint
 all: test build install
 
 run-mock:
@@ -61,6 +62,9 @@ testacc:
 
 fmt:
 	goimports -w .
+
+lint:
+	golangci-lint run
 
 docs:
 	go generate
