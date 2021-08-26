@@ -11,6 +11,8 @@ Am experimental terraform provider for experimenting with SAP Commerce Cloud API
 
 -	[Terraform](https://www.terraform.io/downloads.html) >= 1.0.3
 -	[Go](https://golang.org/doc/install) >= 1.16
+-   [Goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) (`go get
+    golang.org/x/tools/cmd/goimports`)
 
 ## Building The Provider
 

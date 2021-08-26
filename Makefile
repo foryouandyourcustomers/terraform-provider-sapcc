@@ -1,6 +1,5 @@
 SHELL=bash
 TEST?=$$(go list ./... | grep -v 'vendor')
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 HOST=registry.terraform.io
 NAMESPACE=fyayc
@@ -61,7 +60,7 @@ testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	goimports -w .
 
 docs:
 	go generate

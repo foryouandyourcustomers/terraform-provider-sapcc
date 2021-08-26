@@ -6,9 +6,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"os"
 	"terraform-provider-sapcc/sapcc"
+
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
 func main() {
