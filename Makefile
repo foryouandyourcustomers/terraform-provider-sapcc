@@ -1,4 +1,3 @@
-SHELL=/bin/bash
 TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
@@ -10,9 +9,16 @@ VERSION=0.0.1
 OS_ARCH=darwin_amd64
 
 default: build
+all: build install
 
-.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs
-all: test build install
+vet:
+	@echo "go vet ."
+	@go vet $$(go list ./...) ; if [ $$? -eq 1 ]; then \
+		echo ""; \
+		echo "Vet found suspicious constructs. Please check the reported constructs"; \
+		echo "and fix them if necessary before submitting the code for review."; \
+		exit 1; \
+	fi
 
 run-mock:
 	docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
@@ -31,6 +37,8 @@ clean:
 	rm -fr ./bin
 
 just-build:
+	@go mod tidy
+	@go mod vendor
 	mkdir -p bin
 	go build -o bin/${BINARY}
 
@@ -49,21 +57,23 @@ release:
 	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
 
 install: just-build
-	mkdir -p ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	rm -f ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
-	cp ./bin/${BINARY} ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	@mkdir -p ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	@rm -f ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
+	@cp ./bin/${BINARY} ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
 test:
-	go test -i $(TEST) || exit 1
+	@go test -i $(TEST) || exit 1
 	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
 testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	goimports -w $(GOFMT_FILES)
 
 docs:
 	go generate
 
-build: just-build docs
+build: vet test just-build docs
+
+.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs vet

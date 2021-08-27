@@ -20,6 +20,10 @@ Am experimental terraform provider for experimenting with SAP Commerce Cloud API
 ```sh
 $ make install
 ```
+## TODOs
+- [ ] Add unit tests
+- [ ] Cleanup code
+- [ ] Create a dedicated the `http` client 
 
 ## SAP Commerce Cloud API Support
 
