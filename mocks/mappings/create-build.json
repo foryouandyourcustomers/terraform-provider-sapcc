@@ -5,17 +5,10 @@
     "urlPathPattern": "/([a-zA-Z0-9]*)/builds",
     "bodyPatterns": [
       {
-        "matchesJsonPath": {
-          "expression": "$.applicationCode",
-          "contains": "commerce-cloud"
-        },
-        "matchesJsonPath": {
-          "expression": "$.branch",
-          "contains": "main"
-        },
-        "matchesJsonPath": {
-          "expression": "$.name",
-          "contains": "ci-build-0"
+        "equalToJson": {
+          "applicationCode": "commerce-cloud",
+          "branch": "main",
+          "name": "ci-build-0"
         }
       }
     ]
