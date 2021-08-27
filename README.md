@@ -23,18 +23,21 @@ $ make build
 
 You can install the provider locally by running `make install`, this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/fyayc/sapcc/<version>/<arch>`
 
-## Testing the provider
-At the moment, there's no equivalent `InternalValidate` in the framework yet(see #https://github.com/hashicorp/terraform-plugin-framework/issues/113) so there are no basic validation tests. But, a sort of end-to-end testing is possible by using the mock responses. 
+## Manual Testing the provider
+At the moment, there's no equivalent to `InternalValidate` in the framework yet(see #https://github.com/hashicorp/terraform-plugin-framework/issues/113) so there are no basic validation tests. But, a "sort of" end-to-end testing is possible by using the mock responses.  
 
 ```shell
 make install # install the provider locally
 make start-mock # start the mock server
 cd tests
 terraform init && terraform apply -auto-approve
+curl  -sX GET http://localhost:8080/test/builds/000000.0 | jq -r '.name' # name of the default build
+terraform output default_build_name 
 ```
 
 ## TODOs
 - [ ] Add unit tests 
+- [ ] Improve testing
 - [ ] Integrate end-to-end testing in the source
 - [ ] Cleanup code
 - [ ] Create a dedicated the `http` client 
