@@ -12,7 +12,7 @@ import (
 
 var stderr = os.Stderr
 
-const defaultApiBaseUrl = "https://portalrotapi.hana.ondemand.com/v2/subscriptions"
+const defaultAPIBaseURL = "https://portalrotapi.hana.ondemand.com/v2/subscriptions"
 
 func New() tfsdk.Provider {
 	return &provider{}
@@ -21,14 +21,14 @@ func New() tfsdk.Provider {
 // provider describes the data is passed along the context and is available to the resources
 type provider struct {
 	configured          bool
-	SubscriptionBaseUrl string
+	SubscriptionBaseURL string
 	AuthToken           string
 }
 
 // Provider schema struct
 type providerData struct {
-	ApiBaseUrl     types.String `tfsdk:"api_baseurl"`
-	SubscriptionId types.String `tfsdk:"subscription_id"`
+	APIBaseURL     types.String `tfsdk:"api_baseurl"`
+	SubscriptionID types.String `tfsdk:"subscription_id"`
 	AuthToken      types.String `tfsdk:"auth_token"`
 }
 
@@ -68,15 +68,16 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		return
 	}
 
-	var apiBaseUrl string
-	if config.ApiBaseUrl.Unknown || config.ApiBaseUrl.Null || config.ApiBaseUrl.Value == "" {
-		apiBaseUrl = defaultApiBaseUrl
+	var apiBaseURL string
+	if config.APIBaseURL.Unknown || config.APIBaseURL.Null || config.APIBaseURL.Value == "" {
+		apiBaseURL = defaultAPIBaseURL
 	} else {
-		apiBaseUrl = config.ApiBaseUrl.Value
+		apiBaseURL = config.APIBaseURL.Value
 	}
 
-	var subscriptionId string
-	if config.SubscriptionId.Unknown {
+	var subscriptionID string
+
+	if config.SubscriptionID.Unknown {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Can not create the provider.",
@@ -84,13 +85,13 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		})
 	}
 
-	if config.SubscriptionId.Null {
-		subscriptionId = os.Getenv("SAPCC_SUBSCRIPTION_ID")
+	if config.SubscriptionID.Null {
+		subscriptionID = os.Getenv("SAPCC_SUBSCRIPTION_ID")
 	} else {
-		subscriptionId = config.SubscriptionId.Value
+		subscriptionID = config.SubscriptionID.Value
 	}
 
-	if subscriptionId == "" {
+	if subscriptionID == "" {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityWarning,
 			Summary:  "Can not create the provider.",
@@ -99,6 +100,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	}
 
 	var authToken string
+
 	if config.AuthToken.Unknown {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
@@ -122,7 +124,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		})
 	}
 
-	p.SubscriptionBaseUrl = fmt.Sprintf("%s/%s", apiBaseUrl, subscriptionId)
+	p.SubscriptionBaseURL = fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID)
 	p.AuthToken = authToken
 	p.configured = true
 }

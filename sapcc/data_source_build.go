@@ -124,6 +124,7 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 			Summary:  "Provider not configured",
 			Detail:   "The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
 		})
+
 		return
 	}
 
@@ -136,7 +137,7 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/builds/%s", r.p.SubscriptionBaseUrl, build.Code.Value)
+	url := fmt.Sprintf("%s/builds/%s", r.p.SubscriptionBaseURL, build.Code.Value)
 	authToken := r.p.AuthToken
 	buildCode := build.Code.Value
 	fmt.Fprintf(stderr, "[DEBUG] %s url : %s\n", buildCode, url)
@@ -147,40 +148,48 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Error creating http client",
 		})
+
 		return
 	}
+
 	request.Header = http.Header{
 		"Authorization": []string{authToken},
 		"Content-Type":  []string{"application/json"},
 	}
 	res, err := client.Do(request)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error retrieving build %s", err),
 		})
+
 		return
 	}
 	defer res.Body.Close()
 	st := res.StatusCode
+
 	switch st {
 	case 404:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Build '%s' not found", buildCode),
 		})
+
 		return
 	case 401:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", buildCode),
 		})
+
 		return
 	case 403:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
 		})
+
 		return
 	case 200:
 		break
@@ -189,16 +198,19 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
 		})
+
 		return
 	}
 
 	buildResponse := make(map[string]interface{})
 	err = json.NewDecoder(res.Body).Decode(&buildResponse)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error decoding build response %s", err),
 		})
+
 		return
 	}
 
@@ -228,14 +240,18 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 			build.Status = types.String{Value: v.(string)}
 		case "properties":
 			var properties []BuildProperty
+
 			for _, v := range v.([]interface{}) {
 				v := v.(map[string]interface{})
+
 				properties = append(properties, BuildProperty{
 					Key: types.String{Value: v["key"].(string)},
 					Val: types.String{Value: v["value"].(string)},
 				})
 			}
+
 			build.Properties = properties
+
 		default:
 			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 				Severity: tfprotov6.DiagnosticSeverityWarning,

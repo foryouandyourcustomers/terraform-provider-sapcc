@@ -11,14 +11,6 @@ OS_ARCH=darwin_amd64
 default: build
 all: build install
 
-vet:
-	@echo "go vet ."
-	@go vet $$(go list ./...) ; if [ $$? -eq 1 ]; then \
-		echo ""; \
-		echo "Vet found suspicious constructs. Please check the reported constructs"; \
-		echo "and fix them if necessary before submitting the code for review."; \
-		exit 1; \
-	fi
 
 run-mock:
 	docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
@@ -69,11 +61,14 @@ testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 fmt:
-	goimports -w $(GOFMT_FILES)
+	@goimports -w $(GOFMT_FILES)
+
+lint:
+	@golangci-lint run
 
 docs:
-	go generate
+	@go generate
 
-build: vet test just-build docs
+build: lint test just-build docs
 
-.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs vet
+.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs lint

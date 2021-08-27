@@ -1,0 +1,57 @@
+run:
+  concurrency: 4
+  timeout: 1m
+  issues-exit-code: 1
+  tests: true
+
+output:
+  format: colored-line-number
+
+linters-settings:
+  lll:
+    line-length: 150
+
+  errcheck:
+    check-type-assertions: false
+    check-blank: true
+
+  staticcheck:
+    go: "1.16"
+    checks: [ "all" ]
+
+  stylecheck:
+    go: "1.16"
+
+  unused:
+    go: "1.16"
+
+  wsl:
+    allow-cuddle-declarations: true
+    allow-trailing-comment: true
+
+issues:
+  fix: true
+  new: true
+  exclude-rules:
+    - linters:
+        - lll
+      source: ".*(Summary|Detail|Description).*"
+
+
+linters:
+  enable:
+    - megacheck
+    - govet
+    - gofmt
+    - revive
+    - exportloopref
+    - typecheck
+    - stylecheck
+    - unconvert
+    - whitespace
+    - prealloc
+    - unparam
+    - unused
+    - wsl
+    - lll
+  fast: false

@@ -157,6 +157,7 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 			Summary:  "Provider not configured",
 			Detail:   "The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
 		})
+
 		return
 	}
 
@@ -171,7 +172,7 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 	fmt.Fprintf(stderr, "[DEBUG] deployment %s\n", deployment.Code.Value)
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseUrl, deployment.Code.Value)
+	url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseURL, deployment.Code.Value)
 	authToken := r.p.AuthToken
 	deploymentCode := deployment.Code.Value
 	fmt.Fprintf(stderr, "[DEBUG] %s deployment url : %s\n", deploymentCode, url)
@@ -182,40 +183,48 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Error creating http client",
 		})
+
 		return
 	}
+
 	request.Header = http.Header{
 		"Authorization": []string{authToken},
 		"Content-Type":  []string{"application/json"},
 	}
 	res, err := client.Do(request)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error retrieving build %s", err),
 		})
+
 		return
 	}
 	defer res.Body.Close()
 	st := res.StatusCode
+
 	switch st {
 	case 404:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Build '%s' not found", deploymentCode),
 		})
+
 		return
 	case 401:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deploymentCode),
 		})
+
 		return
 	case 403:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deploymentCode),
 		})
+
 		return
 	case 200:
 		break
@@ -224,16 +233,19 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deploymentCode),
 		})
+
 		return
 	}
 
 	deploymentResponse := make(map[string]interface{})
 	err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error decoding build response %s", err),
 		})
+
 		return
 	}
 
@@ -278,9 +290,12 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 			deployment.Status = types.String{Value: val}
 		case "cancelation":
 			fmt.Fprintf(stderr, "\n[DEBUG]-cancelation:%s", v)
+
 			var cancelation []DeployCancellation
+
 			if v != nil {
 				v := v.(map[string]interface{})
+
 				cancelation = append(cancelation, DeployCancellation{
 					CancelledBy:      types.String{Value: v["canceledBy"].(string)},
 					StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
@@ -289,12 +304,13 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 					RollbackDatabase: types.Bool{Value: v["rollbackDatabase"].(bool)},
 				})
 			}
+
 			deployment.Cancelation = cancelation
 		default:
 			fmt.Fprintf(stderr, "\n[DEBUG] dataSourceDeployment %s Unhandled key:%s value:%s, ignoring", deploymentCode, k, v)
 		}
-
 	}
+
 	fmt.Fprintf(stderr, "\n[DEBUG]-Resource State deployment:%+v", deployment)
 
 	// Set state

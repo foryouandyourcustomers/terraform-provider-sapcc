@@ -161,6 +161,7 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 			Summary:  "Provider not configured",
 			Detail:   "The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
 		})
+
 		return
 	}
 
@@ -179,8 +180,9 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 		plan.Strategy.Value))
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/deployments", r.p.SubscriptionBaseUrl)
+	url := fmt.Sprintf("%s/deployments", r.p.SubscriptionBaseURL)
 	authToken := r.p.AuthToken
+
 	fmt.Fprintf(stderr, "[DEBUG] deployment url : %s\n", url)
 
 	request, err := http.NewRequest("POST", url, bytes.NewBuffer(deployReq))
@@ -189,18 +191,22 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Error creating http client",
 		})
+
 		return
 	}
+
 	request.Header = http.Header{
 		"Authorization": []string{authToken},
 		"Content-Type":  []string{"application/json"},
 	}
 	res, err := client.Do(request)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error creating build %s", err),
 		})
+
 		return
 	}
 	defer res.Body.Close()
@@ -212,18 +218,21 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Build '%s' not found", plan.BuildCode.Value),
 		})
+
 		return
 	case 401:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
 		})
+
 		return
 	case 403:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Forbidden, can not access build",
 		})
+
 		return
 	case 200:
 		break
@@ -232,16 +241,19 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Unexpected http status %d  from upstream api; won't continue. expected 200 ", st),
 		})
+
 		return
 	}
 
 	deploymentResponse := make(map[string]interface{})
 	err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error decoding build response %s", err),
 		})
+
 		return
 	}
 
@@ -252,16 +264,18 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 			Summary:  "Can not parse upstream response",
 			Detail:   fmt.Sprintf("Unexpected data received, expected 'code' to be string: response %s", deploymentResponse),
 		})
+
 		return
 	}
 
-	var result Deployment = Deployment{
+	var result = Deployment{
 		Code:               types.String{Value: deploymentCode},
 		BuildCode:          types.String{Value: plan.BuildCode.Value},
 		DatabaseUpdateMode: types.String{Value: plan.DatabaseUpdateMode.Value},
 		EnvironmentCode:    types.String{Value: plan.EnvironmentCode.Value},
 		Strategy:           types.String{Value: plan.Strategy.Value},
 	}
+
 	for _, d := range resp.State.Set(ctx, result) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
@@ -285,7 +299,7 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 		var deployment Deployment
 
 		client := &http.Client{Timeout: 10 * time.Second}
-		url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseUrl, state.Code.Value)
+		url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseURL, state.Code.Value)
 		authToken := r.p.AuthToken
 		deploymentCode := deployment.Code.Value
 		fmt.Fprintf(stderr, "[DEBUG] %s deployment url : %s\n", deploymentCode, url)
@@ -415,7 +429,6 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 			return
 		}
 	}
-
 }
 
 // Update resource
