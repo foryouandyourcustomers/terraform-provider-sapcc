@@ -2,26 +2,40 @@
 
 Am experimental terraform provider for experimenting with SAP Commerce Cloud API. The provider uses the [new plugin framework](https://github.com/hashicorp/terraform-plugin-framework) and is considered to be in the early stages of development. The provider is not ready to be used in the production as the upstream framework is still in `alpha` and there _will_ be breaking changes.
 
- - A resource, and a data source (`sapcc`),
+ - A resource, and a data source (`internal/provider`),
  - Examples (`examples/`) and generated documentation (`docs/`)
- - WireMock's responses from commerce cloud apis are in `sapcc-api-mocks` 
- - Miscellaneous meta files.
-
+ - WireMock's responses from commerce cloud apis are in `mocks` 
+ 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) >= 1.0.3
--	[Go](https://golang.org/doc/install) >= 1.16
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0.3
+- [Go](https://golang.org/doc/install) >= 1.16
+- [GoLangCi Linting](https://golangci-lint.run/usage/install)
 
-## Building The Provider
+## Installing The Provider
 
 1. Clone the repository
 1. Enter the repository directory
 1. Build the provider 
 ```sh
-$ make install
+$ make build
 ```
+
+You can install the provider locally by running `make install`, this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/fyayc/sapcc/<version>/<arch>`
+
+## Testing the provider
+At the moment, there's no equivalent `InternalValidate` in the framework yet(see #https://github.com/hashicorp/terraform-plugin-framework/issues/113) so there are no basic validation tests. But, a sort of end-to-end testing is possible by using the mock responses. 
+
+```shell
+make install # install the provider locally
+make start-mock # start the mock server
+cd tests
+terraform init && terraform apply -auto-approve
+```
+
 ## TODOs
-- [ ] Add unit tests
+- [ ] Add unit tests 
+- [ ] Integrate end-to-end testing in the source
 - [ ] Cleanup code
 - [ ] Create a dedicated the `http` client 
 
