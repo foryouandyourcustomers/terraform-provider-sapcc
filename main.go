@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"terraform-provider-sapcc/sapcc"
+	"terraform-provider-sapcc/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
 func main() {
-	err := tfsdk.Serve(context.Background(), sapcc.New, tfsdk.ServeOpts{
+	err := tfsdk.Serve(context.Background(), provider.New, tfsdk.ServeOpts{
 		Name: "sapcc",
 	})
 	if err != nil {

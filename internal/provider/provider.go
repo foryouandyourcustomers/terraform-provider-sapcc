@@ -1,4 +1,4 @@
-package sapcc
+package provider
 
 import (
 	"context"

@@ -1,6 +1,5 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-WEBSITE_REPO=github.com/hashicorp/terraform-website
 HOST=registry.terraform.io
 NAMESPACE=fyayc
 NAME=sapcc
@@ -9,18 +8,18 @@ VERSION=0.0.1
 OS_ARCH=darwin_amd64
 
 default: build
-all: build install
+all: lint test build docs install
 
 
 run-mock:
-	docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
+	@docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
 
 start-mock:
-	docker run --rm -d -p 8080:8080 --name wiremock -v ${PWD}/sapcc-api-mocks/wiremock:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
+	@docker run --rm -d -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
 	@echo "Mock SAP Commerce Api Server available at http://localhost:8080"
 
 stop-mock:
-	docker kill wiremock
+	@docker kill wiremock
 
 restart-mock: stop-mock start-mock
 
@@ -28,10 +27,10 @@ clean:
 	@echo "Cleaning up binaries"
 	rm -fr ./bin
 
-just-build:
+build:
 	@go mod tidy
 	@go mod vendor
-	mkdir -p bin
+	@mkdir -p bin
 	go build -o bin/${BINARY}
 
 release:
@@ -48,7 +47,7 @@ release:
 	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386
 	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
 
-install: just-build
+install: build
 	@mkdir -p ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	@rm -f ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
 	@cp ./bin/${BINARY} ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
@@ -58,7 +57,7 @@ test:
 	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
 testacc:
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	TF_ACC=1  go test -v -cover ./internal/provider/
 
 fmt:
 	@goimports -w $(GOFMT_FILES)
@@ -68,7 +67,5 @@ lint:
 
 docs:
 	@go generate
-
-build: lint test just-build docs
 
 .PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs lint
