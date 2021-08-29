@@ -15,7 +15,13 @@ import (
 )
 
 func ResourceTest(t *testing.T, tfscript string, resourceName string) *tfjson.StateResource {
-	tmpDir, err := ioutil.TempDir("", "tfinstall")
+	wd, err := os.Getwd()
+
+	if err != nil {
+		t.Fatalf("error creating temp dir: %s", err)
+	}
+
+	tmpDir, err := ioutil.TempDir(wd, "tfscript")
 
 	if err != nil {
 		t.Fatalf("error creating temp dir: %s", err)
