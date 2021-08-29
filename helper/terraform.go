@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,49 +12,64 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/hashicorp/terraform-exec/tfinstall"
 	tfjson "github.com/hashicorp/terraform-json"
 )
 
 func ResourceTest(t *testing.T, tfscript string, resourceName string) *tfjson.StateResource {
-	wd, err := os.Getwd()
+	cwd, _ := os.Getwd()
+	tmpScript, _ := ioutil.TempDir(cwd, "tfscript")
+	tmpInstall, err := ioutil.TempDir("", "tfinstall")
 
-	if err != nil {
-		t.Fatalf("error creating temp dir: %s", err)
+	fmt.Printf("%s", tmpScript)
+
+	defer os.RemoveAll(tmpInstall)
+	defer os.RemoveAll(tmpScript)
+
+	tfexecPath := os.Getenv("TF_ACC_TERRAFORM_EXEC_PATH")
+	tfVersion := os.Getenv("TF_ACC_TERRAFORM_VERSION")
+
+	if tfVersion != "" {
+		tfexecPath, err = tfinstall.Find(context.Background(), tfinstall.ExactVersion(tfVersion, tmpInstall))
+		if err != nil {
+			log.Fatalf("error locating Terraform binary: %s", err)
+		}
+	} else {
+		if tfexecPath == "" {
+			tfexecPath, err = tfinstall.Find(context.Background(), tfinstall.LatestVersion(tmpInstall, false))
+			if err != nil {
+				t.Fatalf("error locating Terraform binary: %s", err)
+			}
+		}
 	}
 
-	tmpDir, err := ioutil.TempDir(wd, "tfscript")
-
+	tf, err := tfexec.NewTerraform(tmpScript, tfexecPath)
 	if err != nil {
-		t.Fatalf("error creating temp dir: %s", err)
+		t.Fatalf("error running NewTerraform: %s", err.Error())
 	}
 
-	defer os.RemoveAll(tmpDir)
+	tf.SetStderr(os.Stderr)
+	ctx := context.Background()
+	defer tf.Destroy(context.Background())
 
-	tfexecPath := os.Getenv("TF_EXEC_PATH")
-
-	tf, err := tfexec.NewTerraform(tmpDir, tfexecPath)
-	if err != nil {
-		t.Fatalf("error running NewTerraform: %s", err)
-	}
-
-	err = writeScript(path.Join(tmpDir, "terraform.tf"), tfscript)
+	err = writeScript(path.Join(tmpScript, "terraform.tf"), tfscript)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = tf.Init(context.Background(), tfexec.Upgrade(true))
+	err = tf.Init(ctx, tfexec.Upgrade(true))
 	if err != nil {
-		t.Fatalf("error running Init: %s", err)
+		t.Fatalf("error running Init: %+v", err)
 	}
 
-	err = tf.Apply(context.Background())
+	err = tf.Apply(ctx)
 	if err != nil {
 		t.Fatalf("error running Apply: %s", err)
 	}
 
-	state, err := tf.Show(context.Background())
+	state, err := tf.Show(ctx)
 	if err != nil {
-		t.Fatalf("error running state: %s", err)
+		t.Fatalf("error showing state: %+v", err)
 	}
 
 	return findResource(state.Values.RootModule.Resources, resourceName)

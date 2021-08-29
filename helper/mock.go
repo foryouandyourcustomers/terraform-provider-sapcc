@@ -28,7 +28,9 @@ func StartMockServer() {
 	}
 
 	imageName := "rodolpheche/wiremock"
-	_, err = cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	_, err = cli.ImagePull(ctx, imageName, types.ImagePullOptions{
+		All: true,
+	})
 
 	if err != nil {
 		panic(err)

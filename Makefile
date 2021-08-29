@@ -5,11 +5,14 @@ NAMESPACE=fyayc
 NAME=sapcc
 BINARY=terraform-provider-${NAME}
 VERSION=0.0.1
-OS_ARCH=darwin_amd64
+OS_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
 
 default: build
 all: lint testacc build docs install
 
+
+pull-mock:
+	@docker pull rodolpheche/wiremock:latest
 
 run-mock:
 	@docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
@@ -54,9 +57,6 @@ install: build
 
 
 testacc: install
-ifndef TF_EXEC_PATH
-	$(error env variable `TF_EXEC_PATH` is undefined: need `terraform` to run acceptance tests)
-endif
 	TF_ACC=1  go test -v -cover ./internal/provider/ -timeout=30s
 
 fmt:
@@ -68,4 +68,4 @@ lint:
 docs:
 	@go generate
 
-.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs lint
+.PHONY: clean start-sapcc-mock stop-sapcc-mock restart-mock website fmt docs lint pull-mock
