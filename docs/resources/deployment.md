@@ -37,7 +37,7 @@ resource "sapcc_deployment" "deployment" {
 
 ### Optional
 
-- **cancelation** (Attributes) If the deployment was cancelled, the cancellation details. (see [below for nested schema](#nestedatt--cancelation))
+- **cancelation** (Attributes List) If the deployment was cancelled, the cancellation details. (see [below for nested schema](#nestedatt--cancelation))
 - **code** (String) The deployment code assigned to this deployment.
 - **created_by** (String) The User Id of the user who created this build.
 - **created_timestamp** (String) Build start timestamp in UTC.

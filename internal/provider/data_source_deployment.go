@@ -100,7 +100,10 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []
 				Description: "If the deployment was cancelled, the cancellation details.",
 				Computed:    true,
 				Optional:    true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+				//FIXME: This is a possible bug in the framework:
+				// we expect here schema.SingleNestedAttributes but we use a List as workaround
+				// https://github.com/hashicorp/terraform-plugin-framework/issues/112
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 					"canceled_by": {
 						Description: "The UserId of the user who cancelled the deployment.",
 						Type:        types.StringType,
@@ -131,7 +134,7 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []
 						Computed:    true,
 						Optional:    true,
 					},
-				}),
+				}, tfsdk.ListNestedAttributesOptions{}),
 			},
 		},
 	}, nil
@@ -288,18 +291,18 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 		case "cancelation":
 			fmt.Fprintf(stderr, "\n[DEBUG]-cancelation:%s", v)
 
-			var cancelation DeployCancellation
+			var cancelation []DeployCancellation
 
 			if v != nil {
 				v := v.(map[string]interface{})
 
-				cancelation = DeployCancellation{
+				cancelation = append(cancelation, DeployCancellation{
 					CancelledBy:      types.String{Value: v["canceledBy"].(string)},
 					StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
 					FinishTimestamp:  types.String{Value: v["finishedTimestamp"].(string)},
 					Failed:           types.Bool{Value: v["failed"].(bool)},
 					RollbackDatabase: types.Bool{Value: v["rollbackDatabase"].(bool)},
-				}
+				})
 			}
 
 			deployment.Cancelation = cancelation
