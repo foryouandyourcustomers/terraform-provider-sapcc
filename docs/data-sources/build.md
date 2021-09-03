@@ -36,7 +36,7 @@ data "sapcc_build" "build" {
 - **build_version** (String) The full build version.
 - **created_by** (String) The S-user Id of the user who created this build.
 - **name** (String) The name of the build used when it was created.
-- **properties** (Object) List of properties associated with this build. (see [below for nested schema](#nestedatt--properties))
+- **properties** (Attributes List) List of properties associated with this build. (see [below for nested schema](#nestedatt--properties))
 - **status** (String) The final status of this build.
 - **subscription_code** (String) The subscription id associated to the build.
 
@@ -45,7 +45,7 @@ data "sapcc_build" "build" {
 
 Optional:
 
-- **key** (String)
-- **val** (String)
+- **key** (String) Key of the property.
+- **val** (String) Value associated with this property.
 
 

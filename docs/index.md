@@ -11,7 +11,7 @@ description: |-
 
 The SAP Commerce Cloud Provider provides resources and data sources for interacting with SAP Commerce Cloud API. For more information, check the official API docs [here](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/66abfe678b55457fab235ce8039dda71.html).
 
-Currently, the provider supports only the following functionalities:
+Currently the provider supports only the following functionalities:
    - Fetching the build details
    - Fetching and Creating deployment
 

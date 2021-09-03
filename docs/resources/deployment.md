@@ -37,7 +37,7 @@ resource "sapcc_deployment" "deployment" {
 
 ### Optional
 
-- **cancelation** (Object) If the deployment was cancelled, the cancellation details. (see [below for nested schema](#nestedatt--cancelation))
+- **cancelation** (Attributes List) If the deployment was cancelled, the cancellation details. (see [below for nested schema](#nestedatt--cancelation))
 - **code** (String) The deployment code assigned to this deployment.
 - **created_by** (String) The User Id of the user who created this build.
 - **created_timestamp** (String) Build start timestamp in UTC.
@@ -53,10 +53,10 @@ resource "sapcc_deployment" "deployment" {
 
 Optional:
 
-- **canceled_by** (String)
-- **failed** (Boolean)
-- **finished_timestamp** (String)
-- **rollback_database** (Boolean)
-- **start_timestamp** (String)
+- **canceled_by** (String) The UserId of the user who cancelled the deployment.
+- **failed** (Boolean) If the deployment failed.
+- **finished_timestamp** (String) The deployment finished timestamp.
+- **rollback_database** (Boolean) Id the database was rollback.
+- **start_timestamp** (String) The deployment start of the timestamp.
 
 
