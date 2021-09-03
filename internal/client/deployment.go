@@ -8,16 +8,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, error) {
+func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, int, error) {
 	request, err := http.NewRequest("GET", c.deployURL(deploymentCode), nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	resp, statusCode, err := c.doRequest(request)
 
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
 
 	var deployment models.Deployment
@@ -84,5 +84,5 @@ func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, error
 		}
 	}
 
-	return &deployment, err
+	return &deployment, statusCode, err
 }

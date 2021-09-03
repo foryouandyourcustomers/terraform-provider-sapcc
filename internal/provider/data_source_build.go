@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"terraform-provider-sapcc/internal/client"
 	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -108,16 +107,16 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfpr
 
 func (r dataSourceBuildType) NewDataSource(ctx context.Context, p tfsdk.Provider) (tfsdk.DataSource, []*tfprotov6.Diagnostic) {
 	return dataSourceBuild{
-		p: *(p.(*provider)),
+		provider: *(p.(*provider)),
 	}, nil
 }
 
 type dataSourceBuild struct {
-	p provider
+	provider provider
 }
 
-func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
-	if !r.p.configured {
+func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+	if !ds.provider.configured {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Provider not configured",
@@ -135,18 +134,8 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 	}
 
 	buildCode := buildRequest.Code.Value
-	httpClient, err := client.NewClient(r.p.SubscriptionBaseURL, r.p.AuthToken)
 
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error creating http client",
-		})
-
-		return
-	}
-
-	buildResponse, st, err := httpClient.GetBuild(buildCode)
+	buildResponse, st, err := ds.provider.client.GetBuild(buildCode)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,

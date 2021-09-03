@@ -2,11 +2,8 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"terraform-provider-sapcc/internal/models"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -143,16 +140,16 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []
 
 func (r dataSourceDeploymentType) NewDataSource(ctx context.Context, p tfsdk.Provider) (tfsdk.DataSource, []*tfprotov6.Diagnostic) {
 	return dataSourceDeployment{
-		p: *(p.(*provider)),
+		provider: *(p.(*provider)),
 	}, nil
 }
 
 type dataSourceDeployment struct {
-	p provider
+	provider provider
 }
 
-func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
-	if !r.p.configured {
+func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
+	if !ds.provider.configured {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Provider not configured",
@@ -163,159 +160,61 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 	}
 
 	// Declare struct that this function will set to this data source's state
-	var deployment models.Deployment
+	var deploymentRequest models.Deployment
 
-	for _, d := range req.Config.Get(ctx, &deployment) {
+	for _, d := range req.Config.Get(ctx, &deploymentRequest) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 
-	fmt.Fprintf(stderr, "[DEBUG] deployment %s\n", deployment.Code.Value)
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseURL, deployment.Code.Value)
-	authToken := r.p.AuthToken
-	deploymentCode := deployment.Code.Value
-	fmt.Fprintf(stderr, "[DEBUG] %s deployment url : %s\n", deploymentCode, url)
-
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error creating http client",
-		})
-
-		return
-	}
-
-	request.Header = http.Header{
-		"Authorization": []string{authToken},
-		"Content-Type":  []string{"application/json"},
-	}
-	res, err := client.Do(request)
+	deploymentCode := deploymentRequest.Code.Value
+	deployResponse, st, err := ds.provider.client.GetDeployment(deploymentCode)
 
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error retrieving build %s", err),
-		})
-
-		return
-	}
-	defer res.Body.Close()
-	st := res.StatusCode
-
-	switch st {
-	case 404:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Build '%s' not found", deploymentCode),
-		})
-
-		return
-	case 401:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deploymentCode),
-		})
-
-		return
-	case 403:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deploymentCode),
-		})
-
-		return
-	case 200:
-		break
-	default:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deploymentCode),
+			Summary:  fmt.Sprintf("Error fetching deployment %s", err),
 		})
 
 		return
 	}
 
-	deploymentResponse := make(map[string]interface{})
-	err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
+	if deployResponse == nil {
+		switch st {
+		case 404:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Build '%s' not found", deploymentCode),
+			})
 
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error decoding build response %s", err),
-		})
+			return
+		case 401:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deploymentCode),
+			})
 
-		return
-	}
+			return
+		case 403:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deploymentCode),
+			})
 
-	for k, v := range deploymentResponse {
-		var val string
-		// we get many nil elements
-		if v != nil {
-			stringVal, ok := v.(string)
-			if ok {
-				val = stringVal
-			} else {
-				fmt.Fprintf(stderr, "\n[DEBUG] Nonstring type received key:%s value:%s", k, v)
-			}
-		}
-
-		switch k {
-		case "createdBy":
-			deployment.CreatedBy = types.String{Value: val}
-		case "buildCode":
-			deployment.BuildCode = types.String{Value: val}
-		case "createdTimestamp":
-			deployment.CreatedTimestamp = types.String{Value: val}
-		case "subscriptionCode":
-			deployment.SubscriptionCode = types.String{Value: val}
-		case "environmentCode":
-			deployment.EnvironmentCode = types.String{Value: val}
-		case "code":
-			deployment.Code = types.String{Value: val}
-		case "databaseUpdateMode":
-			deployment.DatabaseUpdateMode = types.String{Value: val}
-		case "strategy":
-			deployment.Strategy = types.String{Value: val}
-		case "scheduledTimestamp":
-			deployment.ScheduledTimestamp = types.String{Value: val}
-		case "deployedTimestamp":
-			deployment.DeployedTimestamp = types.String{Value: val}
-		case "undeployedTimestamp":
-			deployment.UndeployedTimestamp = types.String{Value: val}
-		case "failedTimestamp":
-			deployment.FailedTimestamp = types.String{Value: val}
-		case "status":
-			deployment.Status = types.String{Value: val}
-		case "cancelation":
-			fmt.Fprintf(stderr, "\n[DEBUG]-cancelation:%s", v)
-
-			var cancelation []models.DeployCancellation
-
-			if v != nil {
-				v := v.(map[string]interface{})
-
-				cancelation = append(cancelation, models.DeployCancellation{
-					CancelledBy:      types.String{Value: v["canceledBy"].(string)},
-					StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
-					FinishTimestamp:  types.String{Value: v["finishedTimestamp"].(string)},
-					Failed:           types.Bool{Value: v["failed"].(bool)},
-					RollbackDatabase: types.Bool{Value: v["rollbackDatabase"].(bool)},
-				})
-			}
-
-			deployment.Cancelation = cancelation
+			return
+		case 200:
+			break
 		default:
-			fmt.Fprintf(stderr, "\n[DEBUG] dataSourceDeployment %s Unhandled key:%s value:%s, ignoring", deploymentCode, k, v)
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deploymentCode),
+			})
+
+			return
 		}
 	}
-
-	fmt.Fprintf(stderr, "\n[DEBUG]-Resource State deployment:%+v", deployment)
-
 	// Set state
-	for _, d := range resp.State.Set(ctx, &deployment) {
+	for _, d := range resp.State.Set(ctx, &deploymentRequest) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}

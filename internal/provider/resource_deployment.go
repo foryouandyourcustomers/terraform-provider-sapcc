@@ -146,17 +146,17 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*t
 // New resource instance
 func (r resourceDeploymentType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, []*tfprotov6.Diagnostic) {
 	return resourceDeployment{
-		p: *(p.(*provider)),
+		provider: *(p.(*provider)),
 	}, nil
 }
 
 type resourceDeployment struct {
-	p provider
+	provider provider
 }
 
 // Create a new resource
 func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
-	if !r.p.configured {
+	if !r.provider.configured {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Provider not configured",
@@ -181,8 +181,8 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 		plan.Strategy.Value))
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/deployments", r.p.SubscriptionBaseURL)
-	authToken := r.p.AuthToken
+	url := fmt.Sprintf("%s/deployments", r.provider.SubscriptionBaseURL)
+	authToken := r.provider.AuthToken
 
 	fmt.Fprintf(stderr, "[DEBUG] deployment url : %s\n", url)
 
@@ -300,8 +300,8 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 		var deployment models.Deployment
 
 		client := &http.Client{Timeout: 10 * time.Second}
-		url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseURL, state.Code.Value)
-		authToken := r.p.AuthToken
+		url := fmt.Sprintf("%s/deployments/%s", r.provider.SubscriptionBaseURL, state.Code.Value)
+		authToken := r.provider.AuthToken
 		deploymentCode := deployment.Code.Value
 		fmt.Fprintf(stderr, "[DEBUG] %s deployment url : %s\n", deploymentCode, url)
 

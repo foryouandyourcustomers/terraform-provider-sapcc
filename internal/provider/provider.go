@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"terraform-provider-sapcc/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,9 +21,8 @@ func New() tfsdk.Provider {
 
 // provider describes the data is passed along the context and is available to the resources
 type provider struct {
-	configured          bool
-	SubscriptionBaseURL string
-	AuthToken           string
+	configured bool
+	client     *client.Client
 }
 
 // Provider schema struct
@@ -124,8 +124,17 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		})
 	}
 
-	p.SubscriptionBaseURL = fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID)
-	p.AuthToken = authToken
+	httpClient, err := client.NewClient(fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID), authToken)
+
+	if err != nil {
+		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  "Error creating http client",
+		})
+
+		return
+	}
+	p.client = httpClient
 	p.configured = true
 }
 
