@@ -36,7 +36,7 @@ TF_ACC_TERRAFORM_EXEC_PATH=/path/to/terraform make testacc
 - [x] Improve testing
 - [x] Integrate acceptance testing in the source
 - [ ] Cleanup code
-- [ ] Create a dedicated the `http` client
+- [x] Create a dedicated the `http` client
 
 ## SAP Commerce Cloud API Support
 
