@@ -29,7 +29,7 @@ data "sapcc_deployment" "deployment" {
 ### Optional
 
 - **build_code** (String) The build code associated with this deployment.
-- **cancelation** (Attributes List) If the deployment was cancelled, the cancellation details. (see [below for nested schema](#nestedatt--cancelation))
+- **cancelation** (Attributes) If the deployment was cancelled, the cancellation details. (see [below for nested schema](#nestedatt--cancelation))
 - **created_by** (String) The User Id of the user who created this build.
 - **created_timestamp** (String) Build start timestamp in UTC.
 - **database_update_mode** (String) The database update mode for the deployment.

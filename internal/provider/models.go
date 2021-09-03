@@ -30,22 +30,20 @@ type BuildProperty struct {
 
 // Deployment is the model that describes the deployment
 type Deployment struct {
-	CreatedBy           types.String `tfsdk:"created_by"`
-	SubscriptionCode    types.String `tfsdk:"subscription_code"`
-	CreatedTimestamp    types.String `tfsdk:"created_timestamp"`
-	BuildCode           types.String `tfsdk:"build_code"`
-	EnvironmentCode     types.String `tfsdk:"environment_code"`
-	DatabaseUpdateMode  types.String `tfsdk:"database_update_mode"`
-	Code                types.String `tfsdk:"code"`
-	Strategy            types.String `tfsdk:"strategy"`
-	ScheduledTimestamp  types.String `tfsdk:"scheduled_timestamp"`
-	DeployedTimestamp   types.String `tfsdk:"deployed_timestamp"`
-	FailedTimestamp     types.String `tfsdk:"failed_timestamp"`
-	UndeployedTimestamp types.String `tfsdk:"undeployed_timestamp"`
-	Status              types.String `tfsdk:"status"`
-	// FIXME: Possible bug in the framework, we don't need a list here
-	// Api response is a single deploy cancellation
-	Cancelation []DeployCancellation `tfsdk:"cancelation"`
+	CreatedBy           types.String       `tfsdk:"created_by"`
+	SubscriptionCode    types.String       `tfsdk:"subscription_code"`
+	CreatedTimestamp    types.String       `tfsdk:"created_timestamp"`
+	BuildCode           types.String       `tfsdk:"build_code"`
+	EnvironmentCode     types.String       `tfsdk:"environment_code"`
+	DatabaseUpdateMode  types.String       `tfsdk:"database_update_mode"`
+	Code                types.String       `tfsdk:"code"`
+	Strategy            types.String       `tfsdk:"strategy"`
+	ScheduledTimestamp  types.String       `tfsdk:"scheduled_timestamp"`
+	DeployedTimestamp   types.String       `tfsdk:"deployed_timestamp"`
+	FailedTimestamp     types.String       `tfsdk:"failed_timestamp"`
+	UndeployedTimestamp types.String       `tfsdk:"undeployed_timestamp"`
+	Status              types.String       `tfsdk:"status"`
+	Cancelation         DeployCancellation `tfsdk:"cancelation"`
 }
 
 type DeployCancellation struct {
