@@ -2,14 +2,13 @@ package client
 
 import (
 	"net/http"
-	"terraform-provider-sapcc/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func (c *Client) GetDeployment(deploymentCode string) (*provider.Deployment, error) {
+func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, error) {
 	request, err := http.NewRequest("GET", c.deployURL(deploymentCode), nil)
 	if err != nil {
 		return nil, err
@@ -21,7 +20,7 @@ func (c *Client) GetDeployment(deploymentCode string) (*provider.Deployment, err
 		return nil, err
 	}
 
-	var deployment provider.Deployment
+	var deployment models.Deployment
 
 	if statusCode == 200 {
 		for k, v := range resp {
@@ -64,12 +63,12 @@ func (c *Client) GetDeployment(deploymentCode string) (*provider.Deployment, err
 			case "status":
 				deployment.Status = types.String{Value: val}
 			case "cancelation":
-				var cancelation []provider.DeployCancellation
+				var cancelation []models.DeployCancellation
 
 				if v != nil {
 					v := v.(map[string]interface{})
 
-					cancelation = append(cancelation, provider.DeployCancellation{
+					cancelation = append(cancelation, models.DeployCancellation{
 						CancelledBy:      types.String{Value: v["canceledBy"].(string)},
 						StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
 						FinishTimestamp:  types.String{Value: v["finishedTimestamp"].(string)},

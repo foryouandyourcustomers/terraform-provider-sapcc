@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"terraform-provider-sapcc/internal/models"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -91,7 +92,7 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []
 				Optional:    true,
 			},
 			"status": {
-				Description: "Status of the Deployment.",
+				Description: "Status of the models.Deployment.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
@@ -162,7 +163,7 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 	}
 
 	// Declare struct that this function will set to this data source's state
-	var deployment Deployment
+	var deployment models.Deployment
 
 	for _, d := range req.Config.Get(ctx, &deployment) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
@@ -291,12 +292,12 @@ func (r dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSource
 		case "cancelation":
 			fmt.Fprintf(stderr, "\n[DEBUG]-cancelation:%s", v)
 
-			var cancelation []DeployCancellation
+			var cancelation []models.DeployCancellation
 
 			if v != nil {
 				v := v.(map[string]interface{})
 
-				cancelation = append(cancelation, DeployCancellation{
+				cancelation = append(cancelation, models.DeployCancellation{
 					CancelledBy:      types.String{Value: v["canceledBy"].(string)},
 					StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
 					FinishTimestamp:  types.String{Value: v["finishedTimestamp"].(string)},

@@ -7,7 +7,7 @@ require (
 	github.com/docker/docker v20.10.8+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/franela/goblin v0.0.0-20210519012713-85d372ac71e2
-	github.com/hashicorp/go-hclog v0.15.0 // indirect
+	github.com/hashicorp/go-hclog v0.15.0
 	github.com/hashicorp/go-plugin v1.4.1 // indirect
 	github.com/hashicorp/terraform-exec v0.14.1-0.20210903091408-e781e9ed19f9
 	github.com/hashicorp/terraform-json v0.12.0

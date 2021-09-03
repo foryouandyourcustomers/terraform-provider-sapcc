@@ -2,26 +2,25 @@ package client
 
 import (
 	"net/http"
-	"terraform-provider-sapcc/internal/provider"
+	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/go-hclog"
-
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func (c *Client) GetBuild(buildCode string) (*provider.Build, error) {
+func (c *Client) GetBuild(buildCode string) (*models.Build, int, error) {
 	request, err := http.NewRequest("GET", c.buildURL(buildCode), nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	resp, statusCode, err := c.doRequest(request)
 
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
 
-	var build provider.Build
+	var build models.Build
 
 	if statusCode == 200 {
 		for k, v := range resp {
@@ -49,12 +48,12 @@ func (c *Client) GetBuild(buildCode string) (*provider.Build, error) {
 			case "status":
 				build.Status = types.String{Value: v.(string)}
 			case "properties":
-				var properties []provider.BuildProperty
+				var properties []models.BuildProperty
 
 				for _, v := range v.([]interface{}) {
 					v := v.(map[string]interface{})
 
-					properties = append(properties, provider.BuildProperty{
+					properties = append(properties, models.BuildProperty{
 						Key: types.String{Value: v["key"].(string)},
 						Val: types.String{Value: v["value"].(string)},
 					})
@@ -68,5 +67,5 @@ func (c *Client) GetBuild(buildCode string) (*provider.Build, error) {
 		}
 	}
 
-	return &build, err
+	return &build, 0, err
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"terraform-provider-sapcc/internal/models"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -93,7 +94,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*t
 				Optional:    true,
 			},
 			"status": {
-				Description: "Status of the Deployment.",
+				Description: "Status of the models.Deployment.",
 				Type:        types.StringType,
 				Computed:    true,
 				Optional:    true,
@@ -166,7 +167,7 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 	}
 
 	// Retrieve values from plan
-	var plan Deployment
+	var plan models.Deployment
 	for _, d := range req.Config.Get(ctx, &plan) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
@@ -268,7 +269,7 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 		return
 	}
 
-	var result = Deployment{
+	var result = models.Deployment{
 		Code:               types.String{Value: deploymentCode},
 		BuildCode:          types.String{Value: plan.BuildCode.Value},
 		DatabaseUpdateMode: types.String{Value: plan.DatabaseUpdateMode.Value},
@@ -285,7 +286,7 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 // Read resource information
 func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
 	// Retrieve values from plan
-	var state Deployment
+	var state models.Deployment
 	for _, d := range req.State.Get(ctx, &state) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
@@ -296,7 +297,7 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 
 	} else {
 		// TODO: this can already be moved to a separate http client
-		var deployment Deployment
+		var deployment models.Deployment
 
 		client := &http.Client{Timeout: 10 * time.Second}
 		url := fmt.Sprintf("%s/deployments/%s", r.p.SubscriptionBaseURL, state.Code.Value)
@@ -406,10 +407,10 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 				deployment.Status = types.String{Value: val}
 			case "cancelation":
 				fmt.Fprintf(stderr, "\n[DEBUG]-cancelation:%s", v)
-				var cancelation []DeployCancellation
+				var cancelation []models.DeployCancellation
 				if v != nil {
 					v := v.(map[string]interface{})
-					cancelation = append(cancelation, DeployCancellation{
+					cancelation = append(cancelation, models.DeployCancellation{
 						CancelledBy:      types.String{Value: v["canceledBy"].(string)},
 						StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
 						FinishTimestamp:  types.String{Value: v["finishedTimestamp"].(string)},

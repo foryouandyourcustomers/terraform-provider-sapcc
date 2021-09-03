@@ -2,10 +2,9 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
+	"terraform-provider-sapcc/internal/client"
+	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -128,21 +127,16 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 		return
 	}
 
-	// Declare struct that this function will set to this data source's state
-	var build Build
-
-	for _, d := range req.Config.Get(ctx, &build) {
+	var buildRequest models.Build
+	// TODO: try using GetAttribute instead?
+	for _, d := range req.Config.Get(ctx, &buildRequest) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/builds/%s", r.p.SubscriptionBaseURL, build.Code.Value)
-	authToken := r.p.AuthToken
-	buildCode := build.Code.Value
-	fmt.Fprintf(stderr, "[DEBUG] %s url : %s\n", buildCode, url)
+	buildCode := buildRequest.Code.Value
+	httpClient, err := client.NewClient(r.p.SubscriptionBaseURL, r.p.AuthToken)
 
-	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
@@ -152,118 +146,53 @@ func (r dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceReque
 		return
 	}
 
-	request.Header = http.Header{
-		"Authorization": []string{authToken},
-		"Content-Type":  []string{"application/json"},
-	}
-	res, err := client.Do(request)
-
+	buildResponse, st, err := httpClient.GetBuild(buildCode)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error retrieving build %s", err),
-		})
-
-		return
-	}
-	defer res.Body.Close()
-	st := res.StatusCode
-
-	switch st {
-	case 404:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Build '%s' not found", buildCode),
-		})
-
-		return
-	case 401:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", buildCode),
-		})
-
-		return
-	case 403:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
-		})
-
-		return
-	case 200:
-		break
-	default:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
+			Summary:  fmt.Sprintf("Error fetching build %s", err),
 		})
 
 		return
 	}
 
-	buildResponse := make(map[string]interface{})
-	err = json.NewDecoder(res.Body).Decode(&buildResponse)
+	if buildResponse == nil {
+		switch st {
+		case 404:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Build '%s' not found", buildCode),
+			})
 
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error decoding build response %s", err),
-		})
+			return
+		case 401:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", buildCode),
+			})
 
-		return
-	}
+			return
+		case 403:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
+			})
 
-	for k, v := range buildResponse {
-		switch k {
-		case "createdBy":
-			build.CreatedBy = types.String{Value: v.(string)}
-		case "branch":
-			build.Branch = types.String{Value: v.(string)}
-		case "applicationDefinitionVersion":
-			build.ApplicationDefinitionVersion = types.String{Value: v.(string)}
-		case "subscriptionCode":
-			build.SubscriptionCode = types.String{Value: v.(string)}
-		case "applicationCode":
-			build.ApplicationCode = types.String{Value: v.(string)}
-		case "code":
-			build.Code = types.String{Value: v.(string)}
-		case "buildVersion":
-			build.BuildVersion = types.String{Value: v.(string)}
-		case "name":
-			build.Name = types.String{Value: v.(string)}
-		case "buildStartTimestamp":
-			build.BuildStartTimestamp = types.String{Value: v.(string)}
-		case "buildEndTimestamp":
-			build.BuildEndTimestamp = types.String{Value: v.(string)}
-		case "status":
-			build.Status = types.String{Value: v.(string)}
-		case "properties":
-			var properties []BuildProperty
-
-			for _, v := range v.([]interface{}) {
-				v := v.(map[string]interface{})
-
-				properties = append(properties, BuildProperty{
-					Key: types.String{Value: v["key"].(string)},
-					Val: types.String{Value: v["value"].(string)},
-				})
-			}
-
-			build.Properties = properties
-
+			return
+		case 200:
+			break
 		default:
 			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityWarning,
-				Summary:  fmt.Sprintf("Unexpected data recevied from build response k=%s v=%s, ignoring", k, v),
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
 			})
+
+			return
 		}
 	}
 
-	fmt.Fprintf(stderr, "\n[DEBUG]-Resource State Build:%+v", build)
-
 	// Set state
-	for _, d := range resp.State.Set(ctx, &build) {
+	for _, d := range resp.State.Set(ctx, &buildResponse) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
