@@ -8,7 +8,7 @@ VERSION=0.0.1
 OS_ARCH=darwin_amd64
 
 default: build
-all: lint test build docs install
+all: lint testacc build docs install
 
 
 run-mock:
@@ -52,12 +52,12 @@ install: build
 	@rm -f ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
 	cp ./bin/${BINARY} ~/.terraform.d/plugins/${HOST}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
-test:
-	@go test -i $(TEST) || exit 1
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
 testacc: install
-	TF_ACC=1  go test -v -cover ./internal/provider/
+ifndef TF_EXEC_PATH
+	$(error env variable `TF_EXEC_PATH` is undefined: need `terraform` to run acceptance tests)
+endif
+	TF_ACC=1  go test -v -cover ./internal/provider/ -timeout=30s
 
 fmt:
 	@goimports -w $(GOFMT_FILES)
