@@ -1,13 +1,9 @@
 package provider
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"terraform-provider-sapcc/internal/models"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -155,8 +151,8 @@ type resourceDeployment struct {
 }
 
 // Create a new resource
-func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
-	if !r.provider.configured {
+func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+	if !rs.provider.configured {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  "Provider not configured",
@@ -173,118 +169,60 @@ func (r resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResource
 		return
 	}
 
-	// prepare the deployment request
-	var deployReq = []byte(fmt.Sprintf(`{"buildCode": "%s","databaseUpdateMode": "%s","environmentCode": "%s","strategy": "%s"}`,
-		plan.BuildCode.Value,
-		plan.DatabaseUpdateMode.Value,
-		plan.EnvironmentCode.Value,
-		plan.Strategy.Value))
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/deployments", r.provider.SubscriptionBaseURL)
-	authToken := r.provider.AuthToken
-
-	fmt.Fprintf(stderr, "[DEBUG] deployment url : %s\n", url)
-
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(deployReq))
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Error creating http client",
-		})
-
-		return
-	}
-
-	request.Header = http.Header{
-		"Authorization": []string{authToken},
-		"Content-Type":  []string{"application/json"},
-	}
-	res, err := client.Do(request)
+	deployResponse, st, err := rs.provider.client.CreateDeployment(&plan)
 
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error creating build %s", err),
-		})
-
-		return
-	}
-	defer res.Body.Close()
-	st := res.StatusCode
-
-	switch st {
-	case 404:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Build '%s' not found", plan.BuildCode.Value),
-		})
-
-		return
-	case 401:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
-		})
-
-		return
-	case 403:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Forbidden, can not access build",
-		})
-
-		return
-	case 200:
-		break
-	default:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d  from upstream api; won't continue. expected 200 ", st),
+			Summary:  fmt.Sprintf("Error creating deployment %s", err),
 		})
 
 		return
 	}
 
-	deploymentResponse := make(map[string]interface{})
-	err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
+	if deployResponse == nil {
+		switch st {
+		case 404:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Build '%s' not found", plan.BuildCode.Value),
+			})
 
-	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error decoding build response %s", err),
-		})
+			return
+		case 401:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
+			})
 
-		return
+			return
+		case 403:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "Forbidden, can not access build",
+			})
+
+			return
+		case 200:
+			break
+		default:
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Unexpected http status %d  from upstream api; won't continue. expected 200 ", st),
+			})
+
+			return
+		}
 	}
 
-	deploymentCode, ok := deploymentResponse["code"].(string)
-	if !ok {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Can not parse upstream response",
-			Detail:   fmt.Sprintf("Unexpected data received, expected 'code' to be string: response %s", deploymentResponse),
-		})
-
-		return
-	}
-
-	var result = models.Deployment{
-		Code:               types.String{Value: deploymentCode},
-		BuildCode:          types.String{Value: plan.BuildCode.Value},
-		DatabaseUpdateMode: types.String{Value: plan.DatabaseUpdateMode.Value},
-		EnvironmentCode:    types.String{Value: plan.EnvironmentCode.Value},
-		Strategy:           types.String{Value: plan.Strategy.Value},
-	}
-
-	for _, d := range resp.State.Set(ctx, result) {
+	for _, d := range resp.State.Set(ctx, deployResponse) {
 		resp.Diagnostics = append(resp.Diagnostics, d)
 		return
 	}
 }
 
 // Read resource information
-func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
 	// Retrieve values from plan
 	var state models.Deployment
 	for _, d := range req.State.Get(ctx, &state) {
@@ -296,144 +234,17 @@ func (r resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceRequ
 		// this means the resource hasn't yet to be created - silently return
 
 	} else {
-		// TODO: this can already be moved to a separate http client
-		var deployment models.Deployment
+		diags, state := fetchDeployment(state.Code.Value, rs.provider.client, resp.Diagnostics)
 
-		client := &http.Client{Timeout: 10 * time.Second}
-		url := fmt.Sprintf("%s/deployments/%s", r.provider.SubscriptionBaseURL, state.Code.Value)
-		authToken := r.provider.AuthToken
-		deploymentCode := deployment.Code.Value
-		fmt.Fprintf(stderr, "[DEBUG] %s deployment url : %s\n", deploymentCode, url)
-
-		request, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  "Error creating http client",
-			})
-			return
-		}
-		request.Header = http.Header{
-			"Authorization": []string{authToken},
-			"Content-Type":  []string{"application/json"},
-		}
-		res, err := client.Do(request)
-		if err != nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Error retrieving build %s", err),
-			})
-			return
-		}
-		defer res.Body.Close()
-		st := res.StatusCode
-		switch st {
-		case 404:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Build '%s' not found", deploymentCode),
-			})
-			return
-		case 401:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deploymentCode),
-			})
-			return
-		case 403:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deploymentCode),
-			})
-			return
-		case 200:
-			break
-		default:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deploymentCode),
-			})
-			return
-		}
-
-		deploymentResponse := make(map[string]interface{})
-		err = json.NewDecoder(res.Body).Decode(&deploymentResponse)
-		if err != nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Error decoding build response %s", err),
-			})
-			return
-		}
-
-		for k, v := range deploymentResponse {
-			var val string
-			// we get many nil elements
-			if v != nil {
-				stringVal, ok := v.(string)
-				if ok {
-					val = stringVal
-				} else {
-					fmt.Fprintf(stderr, "\n[DEBUG] Nonstring type received key:%s value:%s", k, v)
-				}
-			}
-
-			switch k {
-			case "createdBy":
-				deployment.CreatedBy = types.String{Value: val}
-			case "buildCode":
-				deployment.BuildCode = types.String{Value: val}
-			case "createdTimestamp":
-				deployment.CreatedTimestamp = types.String{Value: val}
-			case "subscriptionCode":
-				deployment.SubscriptionCode = types.String{Value: val}
-			case "environmentCode":
-				deployment.EnvironmentCode = types.String{Value: val}
-			case "code":
-				deployment.Code = types.String{Value: val}
-			case "databaseUpdateMode":
-				deployment.DatabaseUpdateMode = types.String{Value: val}
-			case "strategy":
-				deployment.Strategy = types.String{Value: val}
-			case "scheduledTimestamp":
-				deployment.ScheduledTimestamp = types.String{Value: val}
-			case "deployedTimestamp":
-				deployment.DeployedTimestamp = types.String{Value: val}
-			case "undeployedTimestamp":
-				deployment.UndeployedTimestamp = types.String{Value: val}
-			case "failedTimestamp":
-				deployment.FailedTimestamp = types.String{Value: val}
-			case "status":
-				deployment.Status = types.String{Value: val}
-			case "cancelation":
-				fmt.Fprintf(stderr, "\n[DEBUG]-cancelation:%s", v)
-				var cancelation []models.DeployCancellation
-				if v != nil {
-					v := v.(map[string]interface{})
-					cancelation = append(cancelation, models.DeployCancellation{
-						CancelledBy:      types.String{Value: v["canceledBy"].(string)},
-						StartTimestamp:   types.String{Value: v["startTimestamp"].(string)},
-						FinishTimestamp:  types.String{Value: v["finishedTimestamp"].(string)},
-						Failed:           types.Bool{Value: v["failed"].(bool)},
-						RollbackDatabase: types.Bool{Value: v["rollbackDatabase"].(bool)},
-					})
-				}
-				deployment.Cancelation = cancelation
-			default:
-				fmt.Fprintf(stderr, "\n[DEBUG] dataSourceDeployment %s Unhandled key:%s value:%s, ignoring", deploymentCode, k, v)
-			}
-		}
-
-		state := deployment
 		for _, d := range resp.State.Set(ctx, &state) {
-			resp.Diagnostics = append(resp.Diagnostics, d)
+			resp.Diagnostics = append(diags, d)
 			return
 		}
 	}
 }
 
 // Update resource
-func (r resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (rs resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
 	resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 		Severity: tfprotov6.DiagnosticSeverityWarning,
 		Summary:  "Not implemented",
@@ -442,7 +253,7 @@ func (r resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResource
 }
 
 // Delete resource
-func (r resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (rs resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
 	resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 		Severity: tfprotov6.DiagnosticSeverityWarning,
 		Summary:  "Not implemented",

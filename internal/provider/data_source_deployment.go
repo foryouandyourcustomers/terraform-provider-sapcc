@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"terraform-provider-sapcc/internal/client"
 	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -167,55 +168,61 @@ func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourc
 		return
 	}
 
-	deploymentCode := deploymentRequest.Code.Value
-	deployResponse, st, err := ds.provider.client.GetDeployment(deploymentCode)
+	diags, deployment := fetchDeployment(deploymentRequest.Code.Value, ds.provider.client, resp.Diagnostics)
+	// Set state
+	for _, d := range resp.State.Set(ctx, deployment) {
+		resp.Diagnostics = append(diags, d)
+		return
+	}
+}
+
+func fetchDeployment(deploymentCode string, client *client.Client, diags []*tfprotov6.Diagnostic) ([]*tfprotov6.Diagnostic, *models.Deployment) {
+	deployResponse, st, err := client.GetDeployment(deploymentCode)
 
 	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+
+		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error fetching deployment %s", err),
 		})
 
-		return
+		return diags, nil
 	}
 
 	if deployResponse == nil {
 		switch st {
 		case 404:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			diags = append(diags, &tfprotov6.Diagnostic{
 				Severity: tfprotov6.DiagnosticSeverityError,
 				Summary:  fmt.Sprintf("Build '%s' not found", deploymentCode),
 			})
 
-			return
+			return diags, nil
 		case 401:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			diags = append(diags, &tfprotov6.Diagnostic{
 				Severity: tfprotov6.DiagnosticSeverityError,
 				Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deploymentCode),
 			})
 
-			return
+			return diags, nil
 		case 403:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			diags = append(diags, &tfprotov6.Diagnostic{
 				Severity: tfprotov6.DiagnosticSeverityError,
 				Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deploymentCode),
 			})
 
-			return
+			return diags, nil
 		case 200:
 			break
 		default:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			diags = append(diags, &tfprotov6.Diagnostic{
 				Severity: tfprotov6.DiagnosticSeverityError,
 				Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deploymentCode),
 			})
 
-			return
+			return diags, nil
 		}
 	}
-	// Set state
-	for _, d := range resp.State.Set(ctx, &deploymentRequest) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
-		return
-	}
+
+	return diags, deployResponse
 }

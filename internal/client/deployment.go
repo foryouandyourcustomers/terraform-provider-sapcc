@@ -1,6 +1,8 @@
 package client
 
 import (
+	"bytes"
+	"fmt"
 	"net/http"
 	"terraform-provider-sapcc/internal/models"
 
@@ -85,4 +87,44 @@ func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, int, 
 	}
 
 	return &deployment, statusCode, err
+}
+
+func (c *Client) CreateDeployment(plan *models.Deployment) (*models.Deployment, int, error) {
+	// prepare the deployment request
+	var deployReq = []byte(fmt.Sprintf(`{"buildCode": "%s","databaseUpdateMode": "%s","environmentCode": "%s","strategy": "%s"}`,
+		plan.BuildCode.Value,
+		plan.DatabaseUpdateMode.Value,
+		plan.EnvironmentCode.Value,
+		plan.Strategy.Value))
+
+	request, err := http.NewRequest("POST", c.DeploymentBaseURL, bytes.NewBuffer(deployReq))
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	resp, statusCode, err := c.doRequest(request)
+
+	if err != nil {
+		return nil, statusCode, err
+	}
+
+	if statusCode == 200 {
+		deploymentCode, ok := resp["code"].(string)
+
+		if !ok {
+			logger.Error("Unexpected data received, expected 'code' to be string: response", hclog.Fmt("response %s", resp))
+			return nil, statusCode, err
+		}
+
+		return &models.Deployment{
+			Code:               types.String{Value: deploymentCode},
+			BuildCode:          types.String{Value: plan.BuildCode.Value},
+			DatabaseUpdateMode: types.String{Value: plan.DatabaseUpdateMode.Value},
+			EnvironmentCode:    types.String{Value: plan.EnvironmentCode.Value},
+			Strategy:           types.String{Value: plan.Strategy.Value},
+		}, statusCode, err
+	}
+
+	return nil, statusCode, err
 }

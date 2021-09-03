@@ -17,11 +17,13 @@ var logger = hclog.New(&hclog.LoggerOptions{
 
 // Client -
 type Client struct {
-	HTTPClient *http.Client
-	BaseURL    string
-	AuthToken  string
-	buildURL   func(buildCode string) string
-	deployURL  func(deployCode string) string
+	HTTPClient        *http.Client
+	BaseURL           string
+	DeploymentBaseURL string
+	BuildsBaseURL     string
+	AuthToken         string
+	buildURL          func(buildCode string) string
+	deployURL         func(deployCode string) string
 }
 
 // NewClient -
@@ -35,9 +37,11 @@ func NewClient(baseURL, authToken string) (*Client, error) {
 	}
 
 	c := Client{
-		HTTPClient: &http.Client{Timeout: 10 * time.Second},
-		AuthToken:  authToken,
-		BaseURL:    baseURL,
+		HTTPClient:        &http.Client{Timeout: 10 * time.Second},
+		AuthToken:         authToken,
+		BaseURL:           baseURL,
+		BuildsBaseURL:     fmt.Sprintf("%s/builds", baseURL),
+		DeploymentBaseURL: fmt.Sprintf("%s/deployments", baseURL),
 		buildURL: func(buildCode string) string {
 			return fmt.Sprintf("%s/builds/%s", baseURL, buildCode)
 		},
