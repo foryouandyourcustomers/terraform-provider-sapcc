@@ -24,12 +24,12 @@ $ make build
 You can install the provider locally by running `make install`, this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/fyayc/sapcc/<version>/<arch>`
 
 ## Testing the provider
-At the moment, there's no official testing framework (see [#issue 113](https://github.com/hashicorp/terraform-plugin-framework/issues/113), [#issue 19](https://github.com/hashicorp/terraform-plugin-framework/issues/19)). The [helper](./helper) library provides a way for run acceptance tests aganist the mock server. The Mock server responses have been designed carefully based on the official API documentation and responses.
+At the moment, there's no official testing framework (see [#issue 113](https://github.com/hashicorp/terraform-plugin-framework/issues/113). The [helper](./helper) library provides a way for run acceptance tests aganist the mock server. The Mock server responses have been designed carefully based on the official API documentation and responses.
 
-To run the acceptance tests, 
+To run the acceptance tests, you need to either provide terraform cli path with `TF_ACC_TERRAFORM_EXEC_PATH` or provide the version of terraform to run the tests aganist with `TF_ACC_TERRAFORM_VERSION`, this is mostly useful in case of running with CI.
 
 ```shell
-TF_EXEC_PATH=/path/to/terraform make testacc   
+TF_ACC_TERRAFORM_EXEC_PATH=/path/to/terraform make testacc   
 ```
 ## TODOs
 - [ ] Add unit tests
