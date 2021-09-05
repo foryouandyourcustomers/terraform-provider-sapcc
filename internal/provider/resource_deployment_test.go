@@ -82,7 +82,7 @@ resource "sapcc_deployment" "deployment" {
 }
 `, "")
 
-	g.Describe(`data "sapcc_deployment" "build_doesnt_exist"`, func() {
+	g.Describe(`resource "sapcc_deployment" "deployment"`, func() {
 		g.It("Testing unknown builds ", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
@@ -107,12 +107,15 @@ provider "sapcc" {
   subscription_id = "demo"
 }
 
-data "sapcc_deployment" "build_unauth" {
-  code = "401"
+resource "sapcc_deployment" "deployment" {
+  build_code = "401"
+  environment_code = "d0"
+  strategy = "ROLLING_UPDATE"
+  database_update_mode = "NONE"
 }
 `, "")
 
-	g.Describe(`data "sapcc_deployment" "build_unauth"`, func() {
+	g.Describe(`resource "sapcc_deployment" "deployment"`, func() {
 		g.It("Testing authorized access", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")

@@ -109,7 +109,7 @@ data "sapcc_deployment" "build_unauth" {
 }
 `, "")
 
-	g.Describe(`data "sapcc_build" "build_unauth"`, func() {
+	g.Describe(`data "sapcc_deployment" "build_unauth"`, func() {
 		g.It("Testing authorized access", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
