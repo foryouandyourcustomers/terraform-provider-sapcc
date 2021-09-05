@@ -10,7 +10,7 @@ import (
 func TestAccResourceDeployment_Basic(t *testing.T) {
 	g := Goblin(t)
 
-	resourceDeploy := helper.ResourceTest(t, `
+	resourceDeploy, _, _ := helper.ResourceTest(t, `
 terraform {
   required_providers {
     sapcc = {
