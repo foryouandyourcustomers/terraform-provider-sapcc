@@ -53,3 +53,70 @@ resource "sapcc_deployment" "deployment" {
 		})
 	})
 }
+
+func TestAccResourceDeployment_FailedDeployment(t *testing.T) {
+	g := Goblin(t)
+
+	_, errors, _ := helper.ResourceTest(t, `
+terraform {
+  required_providers {
+    sapcc = {
+      version = "~> 0.0.1"
+      source  = "fyayc/sapcc"
+    }
+
+  }
+  required_version = "~> 1.0.3"
+}
+provider "sapcc" {
+  api_baseurl     = "http://localhost:8080"
+  auth_token      = "xxxx"
+  subscription_id = "demo"
+}
+
+resource "sapcc_deployment" "deployment" {
+  build_code = "404"
+  environment_code = "d0"
+  strategy = "ROLLING_UPDATE"
+  database_update_mode = "NONE"
+}
+`, "")
+
+	g.Describe(`data "sapcc_deployment" "build_doesnt_exist"`, func() {
+		g.It("Testing unknown builds ", func() {
+			g.Assert(errors).IsNotNil("Expecting errors not be nil")
+			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
+			g.Assert(errors[0]).Equal("Build '404' not found")
+		})
+	})
+
+	_, errors, _ = helper.ResourceTest(t, `
+terraform {
+  required_providers {
+    sapcc = {
+      version = "~> 0.0.1"
+      source  = "fyayc/sapcc"
+    }
+
+  }
+  required_version = "~> 1.0.3"
+}
+provider "sapcc" {
+  api_baseurl     = "http://localhost:8080"
+  auth_token      = "xxxx"
+  subscription_id = "demo"
+}
+
+data "sapcc_deployment" "build_unauth" {
+  code = "401"
+}
+`, "")
+
+	g.Describe(`data "sapcc_deployment" "build_unauth"`, func() {
+		g.It("Testing authorized access", func() {
+			g.Assert(errors).IsNotNil("Expecting errors not be nil")
+			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
+			g.Assert(errors[0]).Equal("Unauthorized, credentials invalid for deployment '401', please verify your 'auth_token' and 'subscription_id'")
+		})
+	})
+}

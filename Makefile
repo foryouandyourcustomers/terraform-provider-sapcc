@@ -57,7 +57,7 @@ install: build
 
 
 testacc: install
-	TF_ACC=1  go test -v -cover ./internal/provider/ -timeout=30s
+	@go test  -v ./internal/provider/ -timeout=10m
 
 fmt:
 	@goimports -w $(GOFMT_FILES)

@@ -1,31 +1,89 @@
 {
-  "priority": 1,
-  "request": {
-    "method": "POST",
-    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
-    "bodyPatterns": [
-      {
-        "equalToJson": {
-          "buildCode": "000000.0",
-          "databaseUpdateMode": "NONE",
-          "environmentCode": "d0",
-          "strategy": "ROLLING_UPDATE"
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": {
+              "expression": "$.buildCode",
+              "contains": "404"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 404
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": {
+              "expression": "$.buildCode",
+              "contains": "401"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 401
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": {
+              "expression": "$.buildCode",
+              "contains": "500"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 500
+      }
+    },
+    {
+      "priority": 2,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
+        "bodyPatterns": [
+          {
+            "equalToJson": {
+              "buildCode": "000000.0",
+              "databaseUpdateMode": "NONE",
+              "environmentCode": "d0",
+              "strategy": "ROLLING_UPDATE"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "000000"
+        },
+        "transformers": [
+          "response-template"
+        ],
+        "delayDistribution": {
+          "type": "lognormal",
+          "median": 95,
+          "sigma": 0.95
         }
       }
-    ]
-  },
-  "response": {
-    "status": 200,
-    "jsonBody": {
-      "code": "000000"
-    },
-    "transformers": [
-      "response-template"
-    ],
-    "delayDistribution": {
-      "type": "lognormal",
-      "median": 95,
-      "sigma": 0.95
     }
-  }
+  ]
 }
