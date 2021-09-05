@@ -199,13 +199,13 @@ func fetchDeployment(deployCode string, client *client.Client, diags []*tfprotov
 	case 404:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Build '%s' not found", deployCode),
+			Summary:  fmt.Sprintf("Deployment '%s' not found", deployCode),
 		})
 
 	case 401:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deployCode),
+			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for deployment '%s', please verify your 'auth_token' and 'subscription_id'", deployCode),
 		})
 
 	case 403:
@@ -220,7 +220,7 @@ func fetchDeployment(deployCode string, client *client.Client, diags []*tfprotov
 	default:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
+			Summary:  fmt.Sprintf("Unexpected http status %d for deployment '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
 		})
 	}
 

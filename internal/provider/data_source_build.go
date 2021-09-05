@@ -160,7 +160,7 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 	case 401:
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", buildCode),
+			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id'", buildCode),
 		})
 
 		return

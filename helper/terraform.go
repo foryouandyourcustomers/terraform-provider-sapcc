@@ -2,7 +2,6 @@ package helper
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -22,8 +21,6 @@ func ResourceTest(t *testing.T, tfscript string, resourceName string) (*tfjson.S
 	tmpInstall, err := ioutil.TempDir("", "tfinstall")
 	var stdErrBuf strings.Builder
 	var errorList, warnList []string
-
-	fmt.Printf("%s", tmpScript)
 
 	defer os.RemoveAll(tmpInstall)
 	defer os.RemoveAll(tmpScript)
@@ -70,13 +67,15 @@ func ResourceTest(t *testing.T, tfscript string, resourceName string) (*tfjson.S
 		for _, str := range strings.Split(stdErrBuf.String(), "\n") {
 
 			if str != "" && strings.Contains(str, "Error") {
-				errorList = append(errorList, str)
+				errorList = append(errorList, strings.ReplaceAll(str, "Error: ", ""))
 			}
 
 			if str != "" && strings.Contains(str, "Warn") {
-				warnList = append(warnList, str)
+				warnList = append(warnList, strings.ReplaceAll(str, "Warn: ", ""))
 			}
 		}
+
+		return nil, errorList, warnList
 	}
 
 	state, err := tf.Show(ctx)
@@ -84,7 +83,6 @@ func ResourceTest(t *testing.T, tfscript string, resourceName string) (*tfjson.S
 	if err != nil {
 		t.Fatalf("error showing state: %+v", err)
 	}
-
 	return findResource(state.Values.RootModule.Resources, resourceName), errorList, warnList
 }
 
