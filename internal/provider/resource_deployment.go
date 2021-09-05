@@ -180,48 +180,15 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 		return
 	}
 
-	switch st {
-	case 404:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Build '%s' not found", plan.BuildCode.Value),
-		})
+	er, diags := handleDeploymentDiags(plan.BuildCode.Value, st, resp.Diagnostics)
 
-		return
-	case 401:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
-		})
-
-		return
-	case 403:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Forbidden, can not access build",
-		})
-
-		return
-	case 200:
-		if deployResponse == nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  "No deployment code received from api, check logs for errors. ",
-			})
-			return
-		}
-
-	default:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d  from upstream api; won't continue. expected 200 ", st),
-		})
-
+	if er {
+		resp.Diagnostics = diags
 		return
 	}
 
 	for _, d := range resp.State.Set(ctx, deployResponse) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
+		resp.Diagnostics = append(diags, d)
 		return
 	}
 }

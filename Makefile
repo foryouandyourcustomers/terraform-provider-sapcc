@@ -28,6 +28,7 @@ restart-mock: stop-mock start-mock
 
 clean:
 	@echo "Cleaning up binaries"
+	go clean -testcache
 	rm -fr ./bin
 
 build:
@@ -57,7 +58,7 @@ install: build
 
 
 testacc: install
-	@go test  -v ./internal/provider/ -timeout=10m
+	@go clean -testcache && go test  -v ./internal/provider/ -timeout=10m -count=1
 
 fmt:
 	@goimports -w $(GOFMT_FILES)

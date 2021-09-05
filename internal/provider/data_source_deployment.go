@@ -195,34 +195,40 @@ func fetchDeployment(deployCode string, client *client.Client, diags []*tfprotov
 
 	}
 
+	sendErr, diags = handleDeploymentDiags(deployCode, st, diags)
+
+	return sendErr, diags, deployResponse
+}
+
+func handleDeploymentDiags(deployCode string, st int, diags []*tfprotov6.Diagnostic) (bool, []*tfprotov6.Diagnostic) {
 	switch st {
 	case 404:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Deployment '%s' not found", deployCode),
+			Summary:  fmt.Sprintf("Code '%s' not found", deployCode),
 		})
 
 	case 401:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for deployment '%s', please verify your 'auth_token' and 'subscription_id'", deployCode),
+			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for code '%s', please verify your 'auth_token' and 'subscription_id'", deployCode),
 		})
 
 	case 403:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deployCode),
+			Summary:  fmt.Sprintf("Forbidden, can not access deployment with code '%s'", deployCode),
 		})
 
 	case 200:
-		sendErr = false
+		return false, diags
 
 	default:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d for deployment '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
+			Summary:  fmt.Sprintf("Unexpected http status %d for code '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
 		})
 	}
 
-	return sendErr, diags, deployResponse
+	return true, diags
 }

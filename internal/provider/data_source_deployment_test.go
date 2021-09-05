@@ -48,7 +48,7 @@ data "sapcc_deployment" "default_deploy" {
 		g.It("Should match the default environment code", func() {
 			g.Assert(dataDeploy.AttributeValues["environment_code"]).Equal("d0")
 		})
-		g.It("Should match the default deployment strategy", func() {
+		g.It("Should match the default code strategy", func() {
 			g.Assert(dataDeploy.AttributeValues["strategy"]).Equal("ROLLING_UPDATE")
 		})
 	})
@@ -83,7 +83,7 @@ data "sapcc_deployment" "build_doesnt_exist" {
 		g.It("Testing unknown builds ", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Deployment '404' not found")
+			g.Assert(errors[0]).Equal("Code '404' not found")
 		})
 	})
 
@@ -113,7 +113,7 @@ data "sapcc_deployment" "build_unauth" {
 		g.It("Testing authorized access", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Unauthorized, credentials invalid for deployment '401', please verify your 'auth_token' and 'subscription_id'")
+			g.Assert(errors[0]).Equal("Unauthorized, credentials invalid for code '401', please verify your 'auth_token' and 'subscription_id'")
 		})
 	})
 
@@ -143,7 +143,7 @@ data "sapcc_deployment" "build_api_error" {
 		g.It("Testing upstream Api Error ", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Unexpected http status 500 for deployment '500' from upstream api; won't continue. expected 200 ")
+			g.Assert(errors[0]).Equal("Unexpected http status 500 for code '500' from upstream api; won't continue. expected 200 ")
 		})
 	})
 }
