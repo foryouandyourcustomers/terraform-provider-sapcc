@@ -16,10 +16,12 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 )
 
-func ResourceTest(t *testing.T, tfscript string, resourceName string) *tfjson.StateResource {
+func ResourceTest(t *testing.T, tfscript string, resourceName string) (*tfjson.StateResource, []string, []string) {
 	cwd, _ := os.Getwd()
 	tmpScript, _ := ioutil.TempDir(cwd, "tfscript")
 	tmpInstall, err := ioutil.TempDir("", "tfinstall")
+	var stdErrBuf strings.Builder
+	var errorList, warnList []string
 
 	fmt.Printf("%s", tmpScript)
 
@@ -48,7 +50,7 @@ func ResourceTest(t *testing.T, tfscript string, resourceName string) *tfjson.St
 		t.Fatalf("error running NewTerraform: %s", err.Error())
 	}
 
-	tf.SetStderr(os.Stderr)
+	tf.SetStderr(&stdErrBuf)
 	ctx := context.Background()
 	defer tf.Destroy(context.Background())
 
@@ -64,15 +66,26 @@ func ResourceTest(t *testing.T, tfscript string, resourceName string) *tfjson.St
 
 	err = tf.Apply(ctx)
 	if err != nil {
-		t.Fatalf("error running Apply: %s", err)
+
+		for _, str := range strings.Split(stdErrBuf.String(), "\n") {
+
+			if str != "" && strings.Contains(str, "Error") {
+				errorList = append(errorList, str)
+			}
+
+			if str != "" && strings.Contains(str, "Warn") {
+				warnList = append(warnList, str)
+			}
+		}
 	}
 
 	state, err := tf.Show(ctx)
+
 	if err != nil {
 		t.Fatalf("error showing state: %+v", err)
 	}
 
-	return findResource(state.Values.RootModule.Resources, resourceName)
+	return findResource(state.Values.RootModule.Resources, resourceName), errorList, warnList
 }
 
 func writeScript(filename string, data string) error {
