@@ -94,7 +94,7 @@ data "sapcc_build" "build_doesnt_exist" {
 		})
 	})
 
-	_, errors, _ = helper.ResourceTest(t, `
+	_, errors2, _ := helper.ResourceTest(t, `
 terraform {
   required_providers {
     sapcc = {
@@ -118,13 +118,13 @@ data "sapcc_build" "build_unauth" {
 
 	g.Describe(`data "sapcc_build" "build_unauth"`, func() {
 		g.It("Testing authorized access", func() {
-			g.Assert(errors).IsNotNil("Expecting errors not be nil")
-			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Unauthorized, credentials invalid for build '401', please verify your 'auth_token' and 'subscription_id'")
+			g.Assert(errors2).IsNotNil("Expecting errors not be nil")
+			g.Assert(len(errors2)).IsNotZero("Expecting at least one error")
+			g.Assert(errors2[0]).Equal("Unauthorized, credentials invalid for build '401', please verify your 'auth_token' and 'subscription_id'")
 		})
 	})
 
-	_, errors, _ = helper.ResourceTest(t, `
+	_, errors3, _ := helper.ResourceTest(t, `
 terraform {
   required_providers {
     sapcc = {
@@ -148,9 +148,9 @@ data "sapcc_build" "build_api_error" {
 
 	g.Describe(`data "sapcc_build" "build_api_error"`, func() {
 		g.It("Testing upstream Api Error ", func() {
-			g.Assert(errors).IsNotNil("Expecting errors not be nil")
-			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Unexpected http status 500 for build '500' from upstream api; won't continue. expected 200 ")
+			g.Assert(errors3).IsNotNil("Expecting errors not be nil")
+			g.Assert(len(errors3)).IsNotZero("Expecting at least one error")
+			g.Assert(errors3[0]).Equal("Unexpected http status 500 for build '500' from upstream api; won't continue. expected 200 ")
 		})
 	})
 }
