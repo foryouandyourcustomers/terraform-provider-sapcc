@@ -34,3 +34,6 @@ website/vendor
 
 .vscode
 vendor
+
+**/.tests
+/examples/.tests/

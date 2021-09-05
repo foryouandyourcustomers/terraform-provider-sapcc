@@ -168,7 +168,13 @@ func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourc
 		return
 	}
 
-	diags, deployment := fetchDeployment(deploymentRequest.Code.Value, ds.provider.client, resp.Diagnostics)
+	err, diags, deployment := fetchDeployment(deploymentRequest.Code.Value, ds.provider.client, resp.Diagnostics)
+
+	if err {
+		resp.Diagnostics = diags
+		return
+	}
+
 	// Set state
 	for _, d := range resp.State.Set(ctx, deployment) {
 		resp.Diagnostics = append(diags, d)
@@ -176,8 +182,9 @@ func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourc
 	}
 }
 
-func fetchDeployment(deploymentCode string, client *client.Client, diags []*tfprotov6.Diagnostic) ([]*tfprotov6.Diagnostic, *models.Deployment) {
-	deployResponse, st, err := client.GetDeployment(deploymentCode)
+func fetchDeployment(deployCode string, client *client.Client, diags []*tfprotov6.Diagnostic) (bool, []*tfprotov6.Diagnostic, *models.Deployment) {
+	deployResponse, st, err := client.GetDeployment(deployCode)
+	sendErr := true
 
 	if err != nil {
 
@@ -186,43 +193,36 @@ func fetchDeployment(deploymentCode string, client *client.Client, diags []*tfpr
 			Summary:  fmt.Sprintf("Error fetching deployment %s", err),
 		})
 
-		return diags, nil
 	}
 
-	if deployResponse == nil {
-		switch st {
-		case 404:
-			diags = append(diags, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Build '%s' not found", deploymentCode),
-			})
+	switch st {
+	case 404:
+		diags = append(diags, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Build '%s' not found", deployCode),
+		})
 
-			return diags, nil
-		case 401:
-			diags = append(diags, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deploymentCode),
-			})
+	case 401:
+		diags = append(diags, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id' ", deployCode),
+		})
 
-			return diags, nil
-		case 403:
-			diags = append(diags, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deploymentCode),
-			})
+	case 403:
+		diags = append(diags, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", deployCode),
+		})
 
-			return diags, nil
-		case 200:
-			break
-		default:
-			diags = append(diags, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deploymentCode),
-			})
+	case 200:
+		sendErr = false
 
-			return diags, nil
-		}
+	default:
+		diags = append(diags, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
+		})
 	}
 
-	return diags, deployResponse
+	return sendErr, diags, deployResponse
 }

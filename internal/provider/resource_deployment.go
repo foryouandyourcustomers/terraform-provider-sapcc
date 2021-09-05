@@ -180,39 +180,44 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 		return
 	}
 
-	if deployResponse == nil {
-		switch st {
-		case 404:
+	switch st {
+	case 404:
+		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Build '%s' not found", plan.BuildCode.Value),
+		})
+
+		return
+	case 401:
+		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
+		})
+
+		return
+	case 403:
+		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  "Forbidden, can not access build",
+		})
+
+		return
+	case 200:
+		if deployResponse == nil {
 			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Build '%s' not found", plan.BuildCode.Value),
+				Summary:  "No deployment code received from api, check logs for errors. ",
 			})
-
-			return
-		case 401:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  "Unauthorized, credentials invalid for build, please verify your 'auth_token' and 'subscription_id'",
-			})
-
-			return
-		case 403:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  "Forbidden, can not access build",
-			})
-
-			return
-		case 200:
-			break
-		default:
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Unexpected http status %d  from upstream api; won't continue. expected 200 ", st),
-			})
-
 			return
 		}
+
+	default:
+		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Unexpected http status %d  from upstream api; won't continue. expected 200 ", st),
+		})
+
+		return
 	}
 
 	for _, d := range resp.State.Set(ctx, deployResponse) {
@@ -234,7 +239,12 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 		// this means the resource hasn't yet to be created - silently return
 
 	} else {
-		diags, state := fetchDeployment(state.Code.Value, rs.provider.client, resp.Diagnostics)
+		err, diags, state := fetchDeployment(state.Code.Value, rs.provider.client, resp.Diagnostics)
+
+		if err {
+			resp.Diagnostics = diags
+			return
+		}
 
 		for _, d := range resp.State.Set(ctx, &state) {
 			resp.Diagnostics = append(diags, d)

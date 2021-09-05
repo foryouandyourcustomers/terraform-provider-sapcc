@@ -67,5 +67,5 @@ func (c *Client) GetBuild(buildCode string) (*models.Build, int, error) {
 		}
 	}
 
-	return &build, 0, err
+	return &build, statusCode, err
 }

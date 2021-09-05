@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -59,15 +60,24 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 		"Content-Type":  []string{"application/json"},
 	}
 
+	logger.Debug("Sending request", hclog.Fmt("%+v", request))
+
 	res, err := c.HTTPClient.Do(request)
 	if err != nil {
 		return nil, res.StatusCode, err
 	}
 	defer res.Body.Close()
 
+	body, err := ioutil.ReadAll(res.Body)
 	jsonResponse := make(map[string]interface{})
 
-	err = json.NewDecoder(res.Body).Decode(&jsonResponse)
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &jsonResponse)
+		logger.Debug("Response ", hclog.Fmt(" %+v", jsonResponse), " statusCode: ", hclog.Fmt("%s", res.StatusCode))
+	} else {
+		logger.Warn("Response has no content length")
+	}
+
 	// let the client handle all the errors
 	return jsonResponse, res.StatusCode, err
 }

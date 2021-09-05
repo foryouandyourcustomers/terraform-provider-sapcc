@@ -6,12 +6,17 @@ import (
 	"os"
 	"terraform-provider-sapcc/internal/client"
 
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
-var stderr = os.Stderr
+var logger = hclog.New(&hclog.LoggerOptions{
+	Name:  "sapcc-provider",
+	Level: hclog.Debug,
+})
 
 const defaultAPIBaseURL = "https://portalrotapi.hana.ondemand.com/v2/subscriptions"
 
