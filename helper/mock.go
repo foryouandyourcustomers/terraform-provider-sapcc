@@ -18,6 +18,7 @@ import (
 
 const containerName = "wiremock"
 const mockServerPort = "8080"
+const imageName = "rodolpheche/wiremock:2.30.1"
 
 func StartMockServer() {
 	ctx := context.Background()
@@ -27,7 +28,6 @@ func StartMockServer() {
 		panic(err)
 	}
 
-	imageName := "rodolpheche/wiremock"
 	_, err = cli.ImagePull(ctx, imageName, types.ImagePullOptions{
 		All: true,
 	})

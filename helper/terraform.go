@@ -64,6 +64,8 @@ func ResourceTest(t *testing.T, tfscript string, resourceName string) (*tfjson.S
 	err = tf.Apply(ctx)
 	if err != nil {
 
+		t.Logf("Found errors in Apply: %s", err)
+
 		for _, str := range strings.Split(stdErrBuf.String(), "\n") {
 
 			if str != "" && strings.Contains(str, "Error") {

@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 #### CI
 
 - Testing quick fix for CI? ([a1990aa](a1990aa08e778bd047fd9d6def65ba9b8af86511))
+- Adding priorities to mock responses for failed builds/deployments ([faf1ca5](faf1ca5ca5497eff1c8a16bf0cc742044a7d89f7))
 
 #### TEST
 

@@ -6,19 +6,20 @@ NAME=sapcc
 BINARY=terraform-provider-${NAME}
 VERSION=0.0.1
 OS_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
+WIREMOCK=rodolpheche/wiremock:2.30.1
 
 default: build
 all: lint testacc build docs install
 
 
 pull-mock:
-	@docker pull rodolpheche/wiremock:latest
+	@docker pull ${WIREMOCK}
 
 run-mock:
-	@docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
+	@docker run --rm -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock ${WIREMOCK} --verbose --global-response-templating --local-response-templating
 
 start-mock:
-	@docker run --rm -d -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock rodolpheche/wiremock --verbose --global-response-templating --local-response-templating
+	@docker run --rm -d -p 8080:8080 --name wiremock -v ${PWD}/mocks:/home/wiremock ${WIREMOCK} --verbose --global-response-templating --local-response-templating
 	@echo "Mock SAP Commerce Api Server available at http://localhost:8080"
 
 stop-mock:

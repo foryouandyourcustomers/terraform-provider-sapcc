@@ -1,4 +1,5 @@
 {
+  "priority":1,
   "request": {
     "method": "GET",
     "urlPattern": "^\/([a-zA-Z0-9]*)\/(builds|deployments)\/403$"
