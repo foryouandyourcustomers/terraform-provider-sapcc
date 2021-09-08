@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 #### CI
 
 - Testing quick fix for CI? ([a1990aa](a1990aa08e778bd047fd9d6def65ba9b8af86511))
-- Adding priorities to mock responses for failed builds/deployments ([faf1ca5](faf1ca5ca5497eff1c8a16bf0cc742044a7d89f7))
+- Adding priorities to mock responses for failed builds/deployments ([4083e2c](4083e2c36d720b7368fcea3d837d4f0419063ec2))
 
 #### TEST
 
@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 - Adding dedicated http client ([4afc0f1](4afc0f13068fd47f746b72b84d22f979405626d7))
 - Adding dedicated http client for deployment resource ([3510e78](3510e78a7015f9cbedb17503500036392e9474b9))
+- Adding support for tracking deployment progress ([5a127c2](5a127c2fae6692b23616cc0bef967290848c51b8))
 
 #### TEST
 
