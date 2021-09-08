@@ -4,15 +4,21 @@ import (
 	"context"
 	"fmt"
 	"terraform-provider-sapcc/internal/models"
+	"time"
+
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
+// track the deployment progress every xxx mins
+const trackProgressTimeSecs = 30
+
 type resourceDeploymentType struct{}
 
-// resourceDeploymentType Resource schema
+// GetSchema resourceDeploymentType Resource schema
 func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
 	return tfsdk.Schema{
 		Description: "Creates & triggers a deployment for SAP Commerce Cloud. More information on the configuration parameters at [createDeployment api](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/d80fd1dbefff4b8bbbbac66822d4a038.html)",
@@ -90,8 +96,14 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*t
 				Optional:    true,
 			},
 			"status": {
-				Description: "Status of the models.Deployment.",
+				Description: "Status of the Deployment.",
 				Type:        types.StringType,
+				Computed:    true,
+				Optional:    true,
+			},
+			"deploy_progress_percentage": {
+				Description: "Overall deployment progress percentage.",
+				Type:        types.NumberType,
 				Computed:    true,
 				Optional:    true,
 			},
@@ -187,6 +199,51 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 		return
 	}
 
+	// the deployment was just triggered - we don't need to start tracking the progress right away
+	// lets sleep
+	deployStatus := deployResponse.Status.Value
+	deployCode := deployResponse.Code.Value
+
+	for {
+		if deployStatus == "DEPLOYED" || deployStatus == "FAIL" {
+			break
+		}
+
+		time.Sleep(trackProgressTimeSecs * time.Second)
+
+		progress, status, err := rs.provider.client.GetDeploymentProgress(deployCode)
+
+		if err != nil {
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Error fetching deployment progress %s", err),
+			})
+
+			return
+		}
+
+		er, diags = handleDeploymentDiags(plan.BuildCode.Value, status, resp.Diagnostics)
+
+		if er {
+			resp.Diagnostics = diags
+			return
+		}
+
+		deployResponse.ProgressPercentage = progress.ProgressPercentage
+		deployStatus = progress.DeployStatus.Value
+
+		logger.Info("Deploying buildcode#", hclog.Fmt("%s %s (%f)", deployCode, progress.DeployStatus.Value, progress.ProgressPercentage.Value))
+	}
+
+	if deployStatus != "DEPLOYED" {
+		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+			Severity: tfprotov6.DiagnosticSeverityError,
+			Summary:  fmt.Sprintf("Buiild wasn't successfully deployed; status is %s", deployStatus),
+		})
+
+		return
+	}
+
 	for _, d := range resp.State.Set(ctx, deployResponse) {
 		resp.Diagnostics = append(diags, d)
 		return
@@ -202,16 +259,40 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 		return
 	}
 
-	if state.Code.Unknown || state.Code.Null {
+	deployCode := state.Code
+
+	if deployCode.Unknown || deployCode.Null {
 		// this means the resource hasn't yet to be created - silently return
 
 	} else {
+
 		err, diags, state := fetchDeployment(state.Code.Value, rs.provider.client, resp.Diagnostics)
 
 		if err {
 			resp.Diagnostics = diags
 			return
 		}
+
+		progress, status, pErr := rs.provider.client.GetDeploymentProgress(deployCode.Value)
+
+		if pErr != nil {
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  fmt.Sprintf("Error fetching deployment progress %s", pErr),
+			})
+
+			return
+		}
+
+		dErr, diags := handleDeploymentDiags(state.BuildCode.Value, status, resp.Diagnostics)
+
+		if dErr {
+			resp.Diagnostics = diags
+			return
+		}
+
+		state.ProgressPercentage = progress.ProgressPercentage
+		state.Status = progress.DeployStatus
 
 		for _, d := range resp.State.Set(ctx, &state) {
 			resp.Diagnostics = append(diags, d)

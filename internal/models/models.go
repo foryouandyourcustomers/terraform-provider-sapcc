@@ -45,7 +45,8 @@ type Deployment struct {
 	Status              types.String `tfsdk:"status"`
 	// FIXME: Possible bug in the framework, we don't need a list here
 	// Api response is a single deploy cancellation
-	Cancelation []DeployCancellation `tfsdk:"cancelation"`
+	Cancelation        []DeployCancellation `tfsdk:"cancelation"`
+	ProgressPercentage types.Number         `tfsdk:"deploy_progress_percentage"`
 }
 
 type DeployCancellation struct {
@@ -54,4 +55,12 @@ type DeployCancellation struct {
 	FinishTimestamp  types.String `tfsdk:"finished_timestamp"`
 	Failed           types.Bool   `tfsdk:"failed"`
 	RollbackDatabase types.Bool   `tfsdk:"rollback_database"`
+}
+
+// DeployProgress we don't need to keep track of all the stages and the children, we can add this on need basis
+type DeployProgress struct {
+	SubscriptionCode   types.String `tfsdk:"subscription_code"`
+	DeployCode         types.String `tfsdk:"deployment_code"`
+	DeployStatus       types.String `tfsdk:"deployment_status"`
+	ProgressPercentage types.Number `tfsdk:"percentage"`
 }

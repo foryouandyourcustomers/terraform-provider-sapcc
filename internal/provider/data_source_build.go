@@ -6,7 +6,6 @@ import (
 	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/go-hclog"
-
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"

@@ -95,6 +95,12 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []
 				Computed:    true,
 				Optional:    true,
 			},
+			"deploy_progress_percentage": {
+				Description: "Overall deployment progress percentage.",
+				Type:        types.NumberType,
+				Computed:    true,
+				Optional:    true,
+			},
 			"cancelation": {
 				Description: "If the deployment was cancelled, the cancellation details.",
 				Computed:    true,
@@ -197,6 +203,24 @@ func fetchDeployment(deployCode string, client *client.Client, diags []*tfprotov
 
 	sendErr, diags = handleDeploymentDiags(deployCode, st, diags)
 
+	if !sendErr {
+		progress, st, err := client.GetDeploymentProgress(deployCode)
+
+		if err != nil {
+			diags = append(diags, &tfprotov6.Diagnostic{Severity: tfprotov6.DiagnosticSeverityError,
+				Summary: fmt.Sprintf("Error fetching deployment progress %s", err),
+			})
+
+			return sendErr, diags, deployResponse
+		}
+
+		sendErr, diags = handleDeploymentDiags(deployCode, st, diags)
+
+		if !sendErr {
+			deployResponse.ProgressPercentage = progress.ProgressPercentage
+			deployResponse.Status = progress.DeployStatus
+		}
+	}
 	return sendErr, diags, deployResponse
 }
 
@@ -205,7 +229,7 @@ func handleDeploymentDiags(deployCode string, st int, diags []*tfprotov6.Diagnos
 	case 404:
 		diags = append(diags, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Code '%s' not found", deployCode),
+			Summary:  fmt.Sprintf("Deployment or progress not found; code '%s'; Check logs or report it provider developer", deployCode),
 		})
 
 	case 401:

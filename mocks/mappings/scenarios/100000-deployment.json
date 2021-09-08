@@ -1,0 +1,468 @@
+{
+  "mappings": [
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "Started",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000"
+      },
+      "response": {
+        "status": 404
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "newScenarioState": "deployment-created",
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments",
+        "bodyPatterns": [
+          {
+            "equalToJson": {
+              "buildCode": "100000.0",
+              "databaseUpdateMode": "NONE",
+              "environmentCode": "d0",
+              "strategy": "ROLLING_UPDATE"
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "100000"
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deployment-created",
+      "newScenarioState": "deploying25",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "100000",
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "createdBy": "S{{randomInt lower=11000000 upper=99999999}}",
+          "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "buildCode": "100000.0",
+          "environmentCode": "d0",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "deployedTimestamp": null,
+          "failedTimestamp": null,
+          "undeployedTimestamp": null,
+          "status": "SCHEDULED",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deploying25",
+      "newScenarioState": "deploying50",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "100000",
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "createdBy": "S{{randomInt lower=11000000 upper=99999999}}",
+          "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "buildCode": "100000.0",
+          "environmentCode": "d0",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "deployedTimestamp": null,
+          "failedTimestamp": null,
+          "undeployedTimestamp": null,
+          "status": "DEPLOYING",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deploying50",
+      "newScenarioState": "deploying75",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "100000",
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "createdBy": "S{{randomInt lower=11000000 upper=99999999}}",
+          "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "buildCode": "100000.0",
+          "environmentCode": "d0",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "deployedTimestamp": null,
+          "failedTimestamp": null,
+          "undeployedTimestamp": null,
+          "status": "DEPLOYING",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        "transformers": [
+          "response-template"
+        ],
+        "fixedDelayMilliseconds": 10000
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deploying75",
+      "newScenarioState": "deployed",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "100000",
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "createdBy": "S{{randomInt lower=11000000 upper=99999999}}",
+          "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "buildCode": "100000.0",
+          "environmentCode": "d0",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "deployedTimestamp": null,
+          "failedTimestamp": null,
+          "undeployedTimestamp": null,
+          "status": "DEPLOYING",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deployed",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "code": "100000",
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "createdBy": "S{{randomInt lower=11000000 upper=99999999}}",
+          "createdTimestamp": "{{now  offset='+5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "buildCode": "100000.0",
+          "environmentCode": "d0",
+          "databaseUpdateMode": "NONE",
+          "strategy": "ROLLING_UPDATE",
+          "scheduledTimestamp": "{{now offset='-20 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "deployedTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "failedTimestamp": null,
+          "undeployedTimestamp": null,
+          "status": "DEPLOYED",
+          "canceledBy": null,
+          "canceledTimestamp": null,
+          "cancellationFinishedTimestamp": null,
+          "cancellationFailed": null,
+          "cancelation": null
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "Started",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000/progress"
+      },
+      "response": {
+        "status": 404
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deployment-created",
+      "newScenarioState": "deploying25",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000/progress"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "deploymentCode": "100000",
+          "deploymentStatus": "SCHEDULED",
+          "percentage": 0,
+          "stages": [
+            {
+              "name": "Initializing",
+              "type": "step",
+              "startTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": null,
+              "status": "SCHEDULED",
+              "logLink": null,
+              "steps": []
+            }
+          ]
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deploying25",
+      "newScenarioState": "deploying50",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000/progress"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "deploymentCode": "100000",
+          "deploymentStatus": "DEPLOYING",
+          "percentage": 25,
+          "stages": [
+            {
+              "name": "Initializing",
+              "type": "step",
+              "startTimestamp": "{{now offset='-20 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage1",
+              "type": "step",
+              "startTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": null,
+              "status": "SCHEDULED",
+              "logLink": null,
+              "steps": []
+            }
+          ]
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deploying50",
+      "newScenarioState": "deploying75",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000/progress"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "deploymentCode": "100000",
+          "deploymentStatus": "DEPLOYING",
+          "percentage": 50,
+          "stages": [
+            {
+              "name": "Initializing",
+              "type": "step",
+              "startTimestamp": "{{now offset='-20 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage1",
+              "type": "step",
+              "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage2",
+              "type": "step",
+              "startTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": null,
+              "status": "SCHEDULED",
+              "logLink": null,
+              "steps": []
+            }
+          ]
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deploying75",
+      "newScenarioState": "deployed",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000/progress"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "deploymentCode": "100000",
+          "deploymentStatus": "DEPLOYING",
+          "percentage": 75,
+          "stages": [
+            {
+              "name": "Initializing",
+              "type": "step",
+              "startTimestamp": "{{now offset='-20 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage1",
+              "type": "step",
+              "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage2",
+              "type": "step",
+              "startTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage3",
+              "type": "step",
+              "startTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": null,
+              "status": "SCHEDULED",
+              "logLink": null,
+              "steps": []
+            }
+          ]
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    },
+    {
+      "scenarioName": "100000-deployment",
+      "requiredScenarioState": "deployed",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/100000/progress"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "subscriptionCode": "{{request.pathSegments.[0]}}",
+          "deploymentCode": "100000",
+          "deploymentStatus": "DEPLOYED",
+          "percentage": 100,
+          "stages": [
+            {
+              "name": "Initializing",
+              "type": "step",
+              "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage1",
+              "type": "step",
+              "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage2",
+              "type": "step",
+              "startTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            },
+            {
+              "name": "stage3",
+              "type": "step",
+              "startTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "endTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+              "status": "FINISHED",
+              "logLink": null,
+              "steps": []
+            }
+          ]
+        },
+        "transformers": [
+          "response-template"
+        ]
+      }
+    }
+  ]
+}

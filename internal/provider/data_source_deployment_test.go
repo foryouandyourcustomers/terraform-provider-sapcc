@@ -83,7 +83,7 @@ data "sapcc_deployment" "build_doesnt_exist" {
 		g.It("Testing unknown builds ", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Code '404' not found")
+			g.Assert(errors[0]).Equal("Deployment or progress not found; code '404'; Check logs or report it provider developer")
 		})
 	})
 
