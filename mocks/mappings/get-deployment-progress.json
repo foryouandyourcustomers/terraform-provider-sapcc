@@ -1,0 +1,60 @@
+{
+  "priority":1,
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/([a-zA-Z0-9]*)/deployments/000000/progress"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody" : {
+      "subscriptionCode": "{{request.pathSegments.[0]}}",
+      "deploymentCode": "000000",
+      "deploymentStatus": "DEPLOYED",
+      "percentage": 100,
+      "stages": [
+        {
+          "name": "Initializing",
+          "type": "step",
+          "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "status": "FINISHED",
+          "logLink": null,
+          "steps": []
+        },
+        {
+          "name": "stage1",
+          "type": "step",
+          "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "status": "FINISHED",
+          "logLink": null,
+          "steps": []
+        },
+        {
+          "name": "stage2",
+          "type": "step",
+          "startTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "endTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "status": "FINISHED",
+          "logLink": null,
+          "steps": []
+        },
+        {
+          "name": "stage3",
+          "type": "step",
+          "startTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "endTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+          "status": "FINISHED",
+          "logLink": null,
+          "steps": []
+        }
+      ]
+    },
+    "transformers": ["response-template"],
+    "delayDistribution": {
+      "type": "lognormal",
+      "median": 95,
+      "sigma": 0.95
+    }
+  }
+}

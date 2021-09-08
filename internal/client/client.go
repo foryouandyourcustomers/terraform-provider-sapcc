@@ -25,6 +25,7 @@ type Client struct {
 	AuthToken         string
 	buildURL          func(buildCode string) string
 	deployURL         func(deployCode string) string
+	deployProgressURL func(deployCode string) string
 }
 
 // NewClient -
@@ -38,7 +39,7 @@ func NewClient(baseURL, authToken string) (*Client, error) {
 	}
 
 	c := Client{
-		HTTPClient:        &http.Client{Timeout: 10 * time.Second},
+		HTTPClient:        &http.Client{Timeout: 60 * time.Second},
 		AuthToken:         authToken,
 		BaseURL:           baseURL,
 		BuildsBaseURL:     fmt.Sprintf("%s/builds", baseURL),
@@ -48,6 +49,9 @@ func NewClient(baseURL, authToken string) (*Client, error) {
 		},
 		deployURL: func(deployCode string) string {
 			return fmt.Sprintf("%s/deployments/%s", baseURL, deployCode)
+		},
+		deployProgressURL: func(deployCode string) string {
+			return fmt.Sprintf("%s/deployments/%s/progress", baseURL, deployCode)
 		},
 	}
 
@@ -63,8 +67,11 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 	logger.Debug("Sending request", hclog.Fmt("%+v", request))
 
 	res, err := c.HTTPClient.Do(request)
+
+	logger.Debug("Raw response", hclog.Fmt("%+v", res))
+
 	if err != nil {
-		return nil, res.StatusCode, err
+		return nil, 0, err
 	}
 	defer res.Body.Close()
 

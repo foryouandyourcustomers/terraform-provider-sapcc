@@ -1,0 +1,44 @@
+{
+  "subscriptionCode": "{{request.pathSegments.[0]}}",
+  "deploymentCode": "{{request.pathSegments.[2]}}",
+  "deploymentStatus": "DEPLOYED",
+  "percentage": 100,
+  "stages": [
+    {
+      "name": "Initializing",
+      "type": "step",
+      "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "status": "FINISHED",
+      "logLink": null,
+      "steps": []
+    },
+    {
+      "name": "stage1",
+      "type": "step",
+      "startTimestamp": "{{now offset='-15 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "endTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "status": "FINISHED",
+      "logLink": null,
+      "steps": []
+    },
+    {
+      "name": "stage2",
+      "type": "step",
+      "startTimestamp": "{{now offset='-10 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "endTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "status": "FINISHED",
+      "logLink": null,
+      "steps": []
+    },
+    {
+      "name": "stage3",
+      "type": "step",
+      "startTimestamp": "{{now offset='-5 minutes' format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "endTimestamp": "{{now format='yyyy-MM-dd HH:mm:ssZ'}}",
+      "status": "FINISHED",
+      "logLink": null,
+      "steps": []
+    }
+  ]
+}
