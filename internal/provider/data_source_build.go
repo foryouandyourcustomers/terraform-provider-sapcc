@@ -6,14 +6,14 @@ import (
 	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
 type dataSourceBuildType struct{}
 
-func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
+func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Description: "Fetches the  Commerce Cloud build details for the provided build `code`. More information on the configuration parameters at [getBuild api](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/9041daaf93c144acb4726f0c86e58337.html)",
 		Attributes: map[string]tfsdk.Attribute{
@@ -106,7 +106,7 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfpr
 	}, nil
 }
 
-func (r dataSourceBuildType) NewDataSource(ctx context.Context, p tfsdk.Provider) (tfsdk.DataSource, []*tfprotov6.Diagnostic) {
+func (r dataSourceBuildType) NewDataSource(ctx context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
 	return dataSourceBuild{
 		provider: *(p.(*provider)),
 	}, nil
@@ -118,11 +118,13 @@ type dataSourceBuild struct {
 
 func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
 	if !ds.provider.configured {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Provider not configured",
-			Detail:   "The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				"Provider not configured",
+				"The provider hasn't been configured before apply, "+
+					"likely because it depends on an unknown value from another resource. "+
+					"This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
+			))
 
 		return
 	}
@@ -130,7 +132,7 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 	var buildRequest models.Build
 	// TODO: try using GetAttribute instead?
 	for _, d := range req.Config.Get(ctx, &buildRequest) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
+		resp.Diagnostics.Append(d)
 		return
 	}
 
@@ -140,50 +142,56 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 	logger.Debug("buildResponse: ", hclog.Fmt(" %+v", buildResponse), " statusCode: ", hclog.Fmt("%s", st), " err: ", hclog.Fmt("%+v", err))
 
 	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error fetching build %s", err),
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Error fetching build %s", err),
+				"",
+			))
 
 		return
 	}
 
 	switch st {
 	case 404:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Build '%s' not found", buildCode),
-		})
+
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Build '%s' not found", buildCode),
+				"",
+			))
 
 		return
 	case 401:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id'", buildCode),
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id'", buildCode),
+				"",
+			))
 
 		return
 	case 403:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
+				"",
+			))
 
 		return
 	case 200:
 		break
 	default:
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
+				"",
+			))
 
 		return
 	}
 
 	// Set state
 	for _, d := range resp.State.Set(ctx, &buildResponse) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
+		resp.Diagnostics.Append(d)
 		return
 	}
 }
