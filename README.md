@@ -9,7 +9,7 @@ Am experimental terraform provider for experimenting with SAP Commerce Cloud API
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0.3
-- [Go](https://golang.org/doc/install) >= 1.16
+- [Go](https://golang.org/doc/install) >= 1.17
 - [Golangci-lint](https://golangci-lint.run/usage/install)
 
 ## Installing The Provider
