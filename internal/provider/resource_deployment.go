@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
 // track the deployment progress every xxx mins
@@ -19,7 +19,7 @@ const trackProgressTimeSecs = 30
 type resourceDeploymentType struct{}
 
 // GetSchema resourceDeploymentType Resource schema
-func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*tfprotov6.Diagnostic) {
+func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Description: "Creates & triggers a deployment for SAP Commerce Cloud. More information on the configuration parameters at [createDeployment api](https://help.sap.com/viewer/452dcbb0e00f47e88a69cdaeb87a925d/v1905/en-US/d80fd1dbefff4b8bbbbac66822d4a038.html)",
 		Attributes: map[string]tfsdk.Attribute{
@@ -152,7 +152,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, []*t
 }
 
 // New resource instance
-func (r resourceDeploymentType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, []*tfprotov6.Diagnostic) {
+func (r resourceDeploymentType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
 	return resourceDeployment{
 		provider: *(p.(*provider)),
 	}, nil
@@ -165,11 +165,13 @@ type resourceDeployment struct {
 // Create a new resource
 func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
 	if !rs.provider.configured {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  "Provider not configured",
-			Detail:   "The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(
+				"Provider not configured",
+				"The provider hasn't been configured before apply,"+
+					" likely because it depends on an unknown value from another resource."+
+					" This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
+			))
 
 		return
 	}
@@ -177,25 +179,24 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 	// Retrieve values from plan
 	var plan models.Deployment
 	for _, d := range req.Config.Get(ctx, &plan) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
+		resp.Diagnostics.Append(d)
 		return
 	}
 
 	deployResponse, st, err := rs.provider.client.CreateDeployment(&plan)
 
 	if err != nil {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error creating deployment %s", err),
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment %s", err),
+				"",
+			))
 
 		return
 	}
 
-	er, diags := handleDeploymentDiags(plan.BuildCode.Value, st, resp.Diagnostics)
+	er := handleDeploymentDiags(plan.BuildCode.Value, st, &resp.Diagnostics)
 
 	if er {
-		resp.Diagnostics = diags
 		return
 	}
 
@@ -214,18 +215,17 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 		progress, status, err := rs.provider.client.GetDeploymentProgress(deployCode)
 
 		if err != nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Error fetching deployment progress %s", err),
-			})
+			resp.Diagnostics.Append(
+				diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment progress %s", err),
+					"",
+				))
 
 			return
 		}
 
-		er, diags = handleDeploymentDiags(plan.BuildCode.Value, status, resp.Diagnostics)
+		er = handleDeploymentDiags(plan.BuildCode.Value, status, &resp.Diagnostics)
 
 		if er {
-			resp.Diagnostics = diags
 			return
 		}
 
@@ -236,16 +236,16 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 	}
 
 	if deployStatus != "DEPLOYED" {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Buiild wasn't successfully deployed; status is %s", deployStatus),
-		})
+		resp.Diagnostics.Append(
+			diag.NewErrorDiagnostic(fmt.Sprintf("Buiild wasn't successfully deployed; status is %s", deployStatus),
+				"",
+			))
 
 		return
 	}
 
 	for _, d := range resp.State.Set(ctx, deployResponse) {
-		resp.Diagnostics = append(diags, d)
+		resp.Diagnostics.Append(d)
 		return
 	}
 }
@@ -266,28 +266,26 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 
 	} else {
 
-		err, diags, state := fetchDeployment(state.Code.Value, rs.provider.client, resp.Diagnostics)
+		err, state := fetchDeployment(state.Code.Value, rs.provider.client, &resp.Diagnostics)
 
 		if err {
-			resp.Diagnostics = diags
 			return
 		}
 
 		progress, status, pErr := rs.provider.client.GetDeploymentProgress(deployCode.Value)
 
 		if pErr != nil {
-			resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-				Severity: tfprotov6.DiagnosticSeverityError,
-				Summary:  fmt.Sprintf("Error fetching deployment progress %s", pErr),
-			})
+			resp.Diagnostics.Append(
+				diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment progress %s", pErr),
+					"",
+				))
 
 			return
 		}
 
-		dErr, diags := handleDeploymentDiags(state.BuildCode.Value, status, resp.Diagnostics)
+		dErr := handleDeploymentDiags(state.BuildCode.Value, status, &resp.Diagnostics)
 
 		if dErr {
-			resp.Diagnostics = diags
 			return
 		}
 
@@ -295,7 +293,7 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 		state.Status = progress.DeployStatus
 
 		for _, d := range resp.State.Set(ctx, &state) {
-			resp.Diagnostics = append(diags, d)
+			resp.Diagnostics.Append(d)
 			return
 		}
 	}
@@ -303,18 +301,16 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 
 // Update resource
 func (rs resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
-	resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-		Severity: tfprotov6.DiagnosticSeverityWarning,
-		Summary:  "Not implemented",
-		Detail:   "Update of the deployment is not supported yet.",
-	})
+	resp.Diagnostics.Append(
+		diag.NewWarningDiagnostic("Not implemented",
+			"Update of the deployment is not supported yet.",
+		))
 }
 
 // Delete resource
 func (rs resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-	resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-		Severity: tfprotov6.DiagnosticSeverityWarning,
-		Summary:  "Not implemented",
-		Detail:   "Deleting/Rollback of the deployment is not supported yet.",
-	})
+	resp.Diagnostics.Append(
+		diag.NewWarningDiagnostic("Not implemented",
+			"Deleting/Rollback of the deployment is not supported yet.",
+		))
 }

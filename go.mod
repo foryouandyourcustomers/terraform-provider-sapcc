@@ -12,8 +12,7 @@ require (
 	github.com/hashicorp/terraform-exec v0.14.1-0.20210903091408-e781e9ed19f9
 	github.com/hashicorp/terraform-json v0.12.0
 	github.com/hashicorp/terraform-plugin-docs v0.4.1-0.20210903002602-0597116e2323
-	github.com/hashicorp/terraform-plugin-framework v0.2.1-0.20210902152011-dfae6886bcba
-	github.com/hashicorp/terraform-plugin-go v0.3.1
+	github.com/hashicorp/terraform-plugin-framework v0.3.0
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
 	github.com/mitchellh/go-testing-interface v1.0.4 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
