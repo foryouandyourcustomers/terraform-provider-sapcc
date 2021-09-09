@@ -4,7 +4,7 @@ HOST=registry.terraform.io
 NAMESPACE=fyayc
 NAME=sapcc
 BINARY=terraform-provider-${NAME}
-VERSION=0.0.1
+VERSION=0.0.2
 OS_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
 WIREMOCK=rodolpheche/wiremock:2.30.1
 
