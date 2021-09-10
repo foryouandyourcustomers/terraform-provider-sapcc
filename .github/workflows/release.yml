@@ -22,12 +22,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-#      - name: Import GPG key
-#        id: import_gpg
-#        uses: hashicorp/ghaction-import-gpg@v2.1.0
-#        env:
-#          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-#          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - name: Import GPG key
+        id: import_gpg
+        uses: hashicorp/ghaction-import-gpg@v2.1.0
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2.7.0
@@ -35,6 +35,7 @@ jobs:
           version: latest
           args: release --rm-dist
         env:
-#          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          GPG_FINGERPRINT: ${{ secrets.TF_GPG_FINGERPRINT }}
+          PASSPHRASE: ${{ secrets.TF_GPG_PASS }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
