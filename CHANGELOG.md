@@ -24,7 +24,8 @@ All notable changes to this project will be documented in this file.
 
 - Adding dedicated http client ([4afc0f1](4afc0f13068fd47f746b72b84d22f979405626d7))
 - Adding dedicated http client for deployment resource ([3510e78](3510e78a7015f9cbedb17503500036392e9474b9))
-- Adding support for tracking deployment progress ([5a127c2](5a127c2fae6692b23616cc0bef967290848c51b8))
+- Adding support for tracking deployment progress ([2064a07](2064a07cf478c0522519e0012609c99524a04664))
+- Adding support for updating deployments on changes ([4416bb6](4416bb640c98c1b8a9f8dce987a27336a1ee6dbd))
 
 #### TEST
 
@@ -36,6 +37,10 @@ All notable changes to this project will be documented in this file.
 
 - Removing test rule ([8e7b42b](8e7b42b97922e6aa227dffef8fe5a00c4814bd03))
 
+#### DEPS
+
+- Bump github.com/hashicorp/go-hclog from 0.15.0 to 0.16.2 (#2) ([0cfd0ad](0cfd0ad5fe17c6ebbdae4a0e1cdb5cab11c36276))
+
 #### DOCS
 
 - Updated Readme documentaton for acceptance tests ([b10c352](b10c3523e9978a4e560c4867c38d1d55ba932fff))
@@ -46,6 +51,10 @@ All notable changes to this project will be documented in this file.
 - Cleaning up the error messages ([e83f609](e83f609034ff4364772bca59af01b53afb97e233))
 
 ### Refactor
+
+#### DEPS
+
+- Bumping to 0.3.0 of plugin framework ([367862d](367862da6c5a87acf4e547f13ff2dd3a852afefa))
 
 #### MODEL
 

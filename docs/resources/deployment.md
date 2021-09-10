@@ -41,6 +41,7 @@ resource "sapcc_deployment" "deployment" {
 - **code** (String) The deployment code assigned to this deployment.
 - **created_by** (String) The User Id of the user who created this build.
 - **created_timestamp** (String) Build start timestamp in UTC.
+- **deploy_progress_percentage** (Number) Overall deployment progress percentage.
 - **deployed_timestamp** (String) Deploy start timestamp in UTC.
 - **failed_timestamp** (String) If the deployment fails, the failed timestamp.
 - **scheduled_timestamp** (String) Timestamp when the deployment was initially scheduled.

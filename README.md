@@ -44,7 +44,7 @@ TF_ACC_TERRAFORM_EXEC_PATH=/path/to/terraform make testacc
 - [X] Fetch deployment Details
 - [X] Create deployment
 - [X] Add deployment progress during deployment
-- [ ] Update deployment with the change build code
+- [X] Update deployment with the change build code
 - [ ] Create new build
 - [ ] Add build logs during build
 - [ ] Cancel build?
