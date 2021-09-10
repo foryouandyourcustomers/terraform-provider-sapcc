@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"terraform-provider-sapcc/internal/models"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -35,7 +34,7 @@ func (c *Client) GetDeploymentProgress(deploymentCode string) (*models.DeployPro
 			case "percentage":
 				progress.ProgressPercentage = types.Number{Value: big.NewFloat(v.(float64))}
 			default:
-				logger.Debug("Skipping", hclog.Fmt(" k=%s v=%s, ignoring", k, v))
+				logger.Debug("GetDeploymentProgress: Skipping", k, v)
 			}
 		}
 	}
