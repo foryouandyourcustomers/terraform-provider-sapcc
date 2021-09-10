@@ -77,6 +77,9 @@ func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, int, 
 						Failed:           types.Bool{Value: v["failed"].(bool)},
 						RollbackDatabase: types.Bool{Value: v["rollbackDatabase"].(bool)},
 					})
+				} else {
+					// temporary fix
+					cancelation = []models.DeployCancellation{}
 				}
 
 				deployment.Cancelation = cancelation

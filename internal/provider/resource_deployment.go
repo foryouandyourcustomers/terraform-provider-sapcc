@@ -3,12 +3,15 @@ package provider
 import (
 	"context"
 	"fmt"
+	"terraform-provider-sapcc/internal/client"
 	"terraform-provider-sapcc/internal/models"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -46,6 +49,21 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Type:        types.StringType,
 				Required:    true,
 				Computed:    false,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					tfsdk.RequiresReplaceIf(func(ctx context.Context, state, config attr.Value, path *tftypes.AttributePath) (bool, diag.Diagnostics) {
+						if state != nil && config != nil {
+							stateVal := state.(types.String)
+							configVal := config.(types.String)
+
+							if !stateVal.Unknown && !stateVal.Null && !configVal.Unknown && !configVal.Null {
+								if configVal.Value != stateVal.Value {
+									return true, nil
+								}
+							}
+						}
+						return false, nil
+					}, "Changes in build code will trigger new deployment", ""),
+				},
 			},
 			"strategy": {
 				Description: "The strategy used for this deployment.",
@@ -58,6 +76,21 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Type:        types.StringType,
 				Required:    true,
 				Computed:    false,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					tfsdk.RequiresReplaceIf(func(ctx context.Context, state, config attr.Value, path *tftypes.AttributePath) (bool, diag.Diagnostics) {
+						if state != nil && config != nil {
+							stateVal := state.(types.String)
+							configVal := config.(types.String)
+
+							if !stateVal.Unknown && !stateVal.Null && !configVal.Unknown && !configVal.Null {
+								if configVal.Value != stateVal.Value {
+									return true, nil
+								}
+							}
+						}
+						return false, nil
+					}, "Changes in environment code will trigger new deployment", ""),
+				},
 			},
 			"created_timestamp": {
 				Description: "Build start timestamp in UTC.",
@@ -183,64 +216,9 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 		return
 	}
 
-	deployResponse, st, err := rs.provider.client.CreateDeployment(&plan)
+	err, deployResponse := createNewDeployment(rs.provider.client, &resp.Diagnostics, &plan)
 
-	if err != nil {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment %s", err),
-				"",
-			))
-
-		return
-	}
-
-	er := handleDeploymentDiags(plan.BuildCode.Value, st, &resp.Diagnostics)
-
-	if er {
-		return
-	}
-
-	// the deployment was just triggered - we don't need to start tracking the progress right away
-	// lets sleep
-	deployStatus := deployResponse.Status.Value
-	deployCode := deployResponse.Code.Value
-
-	for {
-		if deployStatus == "DEPLOYED" || deployStatus == "FAIL" {
-			break
-		}
-
-		time.Sleep(trackProgressTimeSecs * time.Second)
-
-		progress, status, err := rs.provider.client.GetDeploymentProgress(deployCode)
-
-		if err != nil {
-			resp.Diagnostics.Append(
-				diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment progress %s", err),
-					"",
-				))
-
-			return
-		}
-
-		er = handleDeploymentDiags(plan.BuildCode.Value, status, &resp.Diagnostics)
-
-		if er {
-			return
-		}
-
-		deployResponse.ProgressPercentage = progress.ProgressPercentage
-		deployStatus = progress.DeployStatus.Value
-
-		logger.Info("Deploying buildcode#", hclog.Fmt("%s %s (%f)", deployCode, progress.DeployStatus.Value, progress.ProgressPercentage.Value))
-	}
-
-	if deployStatus != "DEPLOYED" {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(fmt.Sprintf("Buiild wasn't successfully deployed; status is %s", deployStatus),
-				"",
-			))
-
+	if err {
 		return
 	}
 
@@ -301,16 +279,101 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 
 // Update resource
 func (rs resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
-	resp.Diagnostics.Append(
-		diag.NewWarningDiagnostic("Not implemented",
-			"Update of the deployment is not supported yet.",
-		))
+	// In general, there isn't anything to update on the already existing deployment
+	// we will not change in the existing state, a change that will trigger deployments is already handled in "Schema" definition
+	// TODO: should we re-create/update deployment on minor updates?
+	var plan, state models.Deployment
+
+	for _, d := range req.Plan.Get(ctx, &plan) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
+		return
+	}
+
+	for _, d := range req.State.Get(ctx, &state) {
+		resp.Diagnostics = append(resp.Diagnostics, d)
+		return
+	}
+	// Setting the planned updates to state! the drifted attributes will be updated during a refresh
+	for _, d := range resp.State.Set(ctx, plan) {
+		resp.Diagnostics.Append(d)
+		return
+	}
 }
 
 // Delete resource
 func (rs resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-	resp.Diagnostics.Append(
-		diag.NewWarningDiagnostic("Not implemented",
-			"Deleting/Rollback of the deployment is not supported yet.",
-		))
+	// There isn't anything to clean up on the server side, the old deployment is already created and doesn't need any cleanup
+	// In-future, there might be some cleanups here
+	resp.State.RemoveResource(ctx)
+}
+
+func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *models.Deployment) (bool, *models.Deployment) {
+	deployResponse, st, err := client.CreateDeployment(plan)
+
+	if err != nil {
+		diags.Append(
+			diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment %s", err),
+				"",
+			))
+
+		return true, deployResponse
+	}
+
+	er := handleDeploymentDiags(plan.BuildCode.Value, st, diags)
+
+	if er {
+		return true, deployResponse
+	}
+
+	deployStatus := deployResponse.Status.Value
+	deployCode := deployResponse.Code.Value
+
+	for {
+		if deployStatus == "DEPLOYED" || deployStatus == "FAIL" {
+			break
+		}
+
+		time.Sleep(trackProgressTimeSecs * time.Second)
+
+		progress, status, err := client.GetDeploymentProgress(deployCode)
+
+		if err != nil {
+			diags.Append(
+				diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment progress %s", err),
+					"",
+				))
+
+			return true, deployResponse
+		}
+
+		er = handleDeploymentDiags(plan.BuildCode.Value, status, diags)
+
+		if er {
+			return true, deployResponse
+		}
+
+		deployResponse.ProgressPercentage = progress.ProgressPercentage
+		deployStatus = progress.DeployStatus.Value
+
+		logger.Info("Deploying buildcode#", hclog.Fmt("%s %s (%f)", deployCode, progress.DeployStatus.Value, progress.ProgressPercentage.Value))
+	}
+
+	if deployStatus != "DEPLOYED" {
+		diags.Append(
+			diag.NewErrorDiagnostic(fmt.Sprintf("Buiild wasn't successfully deployed; status is %s", deployStatus),
+				"",
+			))
+
+		return true, deployResponse
+	}
+
+	// deployment is now created
+	// let's fill in the rest of the data
+	er, deployment := fetchDeployment(deployResponse.Code.Value, client, diags)
+
+	if er {
+		return true, deployResponse
+	}
+
+	return false, deployment
 }
