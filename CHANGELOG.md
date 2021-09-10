@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 #### API
 
 - Handling empty responses ([e3e01ce](e3e01ceba8a00e7d371ad1f27b20a081671c92e2))
+- Adapting to edge cases ([bd7ef00](bd7ef0073e3a548744d783ebd948948afcd90121))
 
 #### CI
 
@@ -25,7 +26,7 @@ All notable changes to this project will be documented in this file.
 - Adding dedicated http client ([4afc0f1](4afc0f13068fd47f746b72b84d22f979405626d7))
 - Adding dedicated http client for deployment resource ([3510e78](3510e78a7015f9cbedb17503500036392e9474b9))
 - Adding support for tracking deployment progress ([2064a07](2064a07cf478c0522519e0012609c99524a04664))
-- Adding support for updating deployments on changes ([4416bb6](4416bb640c98c1b8a9f8dce987a27336a1ee6dbd))
+- Adding support for updating deployments on changes ([05ddf7d](05ddf7df80699ae4c4464d6996772ae5c84f4ef2))
 
 #### TEST
 
