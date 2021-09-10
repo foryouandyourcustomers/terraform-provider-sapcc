@@ -25,13 +25,6 @@ builds:
         goarch: '386'
     binary: '{{ .ProjectName }}_v{{ .Version }}'
 
-announce:
-  slack:
-    enabled: true
-    message_template: '📢📢 New Version *{{.Version}}* is released 🎉 🎉\n\nMore detailed changes are <{{ .GitURL }}/blob/{{ .Tag }}/CHANGELOG.md|here>.\nThe provider should already be available to be used directly, but you can manually download the supported plugin at {{ .GitURL }}/releases/tag/{{ .Tag }}\n\n Note: The provider is still `alpha` version'
-    channel: '#lapp-cloud-deployments'
-    username: 'terraform-provider-sapcc'
-
 archives:
   - format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
