@@ -28,10 +28,9 @@ builds:
 announce:
   slack:
     enabled: true
-    message_template: '{{.Version}} is out!'
+    message_template: '📢 {{ .ProjectName }} {{.Version}} is out 🎉 🎉 Check it out at {{ .GitURL }}/releases/tag/{{ .Tag }} '
     channel: '#lapp-cloud-deployments'
     username: 'terraform-provider-sapcc'
-    icon_emoji: '🎉'
 
 archives:
   - format: zip
