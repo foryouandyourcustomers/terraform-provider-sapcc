@@ -112,7 +112,7 @@ func (c *Client) CreateDeployment(plan *models.Deployment) (*models.Deployment, 
 		return nil, statusCode, err
 	}
 
-	if statusCode == 200 {
+	if statusCode == 200 || statusCode == 201 {
 		deploymentCode, ok := resp["code"].(string)
 
 		if !ok {

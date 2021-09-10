@@ -227,6 +227,13 @@ func fetchDeployment(deployCode string, client *client.Client, diags *diag.Diagn
 
 func handleDeploymentDiags(deployCode string, st int, diags *diag.Diagnostics) bool {
 	switch st {
+	case 400:
+		diags.Append(
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Bad Request got 400 for code '%s'; Is the environment busy with another deployment in-progress?", deployCode),
+				"",
+			))
+
 	case 404:
 
 		diags.Append(
@@ -250,6 +257,9 @@ func handleDeploymentDiags(deployCode string, st int, diags *diag.Diagnostics) b
 			))
 
 	case 200:
+		return false
+
+	case 201:
 		return false
 
 	default:
