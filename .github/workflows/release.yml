@@ -40,6 +40,9 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
 
+      - uses: olegtarasov/get-tag@v2.1
+        id: tagName
+
       - name: Release Announce
         uses: edge/simple-slack-notify@master
         if: success()
@@ -49,6 +52,6 @@ jobs:
           text: '📢 New Version Released 📢'
           color: 'good'
           fields: |
-            [{ "title": "Version", "value": "${{ github.event.release.tag_name }}" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${{ github.event.release.tag_name }}" },{"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${{ github.event.release.tag_name }}/CHANGELOG.md" },{ "title": "Timestamp", "value": "${Date.now()}", "short": true }]
+            [{ "title": "Version", "value": "${{ steps.tagName.outputs.tag }}" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${{ steps.tagName.outputs.tag }}" },{"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${{ steps.tagName.outputs.tag }}/CHANGELOG.md" },{ "title": "Timestamp", "value": "${Date.now()}", "short": true }]
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
