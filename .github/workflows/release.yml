@@ -48,8 +48,6 @@ jobs:
           text: '📢📢 New Version Released'
           color: 'good'
           fields: |
-            [{ "title": "version", "value": "${env.GITHUB_REF}" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${env.GITHUB_REF}" },
-            {"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${env.GITHUB_REF}/CHANGELOG.md" }
-            { "title": "Timestamp", "value": "${Date.now()}", "short": true }]
+            [{ "title": "version", "value": "${env.GITHUB_REF}" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${env.GITHUB_REF}" },{"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${env.GITHUB_REF}/CHANGELOG.md" },{ "title": "Timestamp", "value": "${Date.now()}", "short": true }]
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
