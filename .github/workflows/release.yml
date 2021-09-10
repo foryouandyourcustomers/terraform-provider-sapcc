@@ -39,15 +39,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
+
       - name: Release Announce
         uses: edge/simple-slack-notify@master
         if: success()
         with:
           channel: '#lapp-cloud-deployments'
           username: 'terraform-provider-sapcc'
-          text: '📢📢 New Version Released'
+          text: '📢 New Version Released 📢'
           color: 'good'
           fields: |
-            [{ "title": "version", "value": "${env.GITHUB_REF}" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${env.GITHUB_REF}" },{"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${env.GITHUB_REF}/CHANGELOG.md" },{ "title": "Timestamp", "value": "${Date.now()}", "short": true }]
+            [{ "title": "Version", "value": "${{ github.event.release.tag_name }}" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${{ github.event.release.tag_name }}" },{"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${{ github.event.release.tag_name }}/CHANGELOG.md" },{ "title": "Timestamp", "value": "${Date.now()}", "short": true }]
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
