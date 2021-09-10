@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"terraform-provider-sapcc/internal/client"
 	"terraform-provider-sapcc/internal/models"
 	"time"
@@ -219,6 +220,7 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 	err, deployResponse := createNewDeployment(rs.provider.client, &resp.Diagnostics, &plan)
 
 	if err {
+		resp.State.Set(ctx, &plan)
 		return
 	}
 
@@ -311,6 +313,19 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 	deployResponse, st, err := client.CreateDeployment(plan)
 
 	if err != nil {
+
+		// this may be mean that the strategy of ROLLING_UPDATE might not work,
+		// we can ask the practitioners to look at others
+		if strings.Contains(err.Error(), "Unable to deploy build with rolling update") && plan.Strategy.Value == "ROLLING_UPDATE" {
+			diags.Append(
+				diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment: %s", err),
+					"It's possible the previous deployment might have been interrupted and can not recover, "+
+						"the strategy 'ROLLING_UPDATE' might not work. May be try 'RECREATE' instead?",
+				))
+
+			return true, deployResponse
+		}
+
 		diags.Append(
 			diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment %s", err),
 				"",
@@ -346,6 +361,8 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 			return true, deployResponse
 		}
 
+		logger.Debug("Deploying progress: ", progress)
+
 		er = handleDeploymentDiags(plan.BuildCode.Value, status, diags)
 
 		if er {
@@ -360,7 +377,7 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 
 	if deployStatus != "DEPLOYED" {
 		diags.Append(
-			diag.NewErrorDiagnostic(fmt.Sprintf("Buiild wasn't successfully deployed; status is %s", deployStatus),
+			diag.NewErrorDiagnostic(fmt.Sprintf("Build wasn't successfully deployed; status is %s", deployStatus),
 				"",
 			))
 

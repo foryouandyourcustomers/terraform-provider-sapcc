@@ -62,6 +62,7 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 	request.Header = http.Header{
 		"Authorization": []string{c.AuthToken},
 		"Content-Type":  []string{"application/json"},
+		"User-Agent":    []string{"terraform-provider-sapcc/alpha"},
 	}
 
 	logger.Debug("Sending request", hclog.Fmt("%+v", request))
@@ -81,6 +82,12 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 	if len(body) > 0 {
 		err = json.Unmarshal(body, &jsonResponse)
 		logger.Debug("Response ", hclog.Fmt(" %+v", jsonResponse), " statusCode: ", hclog.Fmt("%s", res.StatusCode))
+
+		if jsonResponse["title"] == "Api Exception" {
+			err = fmt.Errorf("%s: %s", jsonResponse["message"], jsonResponse["detail"])
+
+			return nil, res.StatusCode, err
+		}
 	} else {
 		logger.Warn("Response has no content length")
 	}
