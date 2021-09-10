@@ -14,7 +14,7 @@ import (
 
 var (
 	// this is supplied by the goreleaser - check .goreleaser.yml
-	version = "dev"
+	version = "0.0.0"
 )
 
 func main() {
