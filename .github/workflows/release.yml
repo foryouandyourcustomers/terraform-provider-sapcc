@@ -5,9 +5,8 @@ env:
 
 on:
   push:
-    branches:
-      - chore/publish
-
+    tags:
+      - 'v*'
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
