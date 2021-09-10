@@ -28,7 +28,7 @@ builds:
 announce:
   slack:
     enabled: true
-    message_template: '📢 {{ .ProjectName }} {{.Version}} is out 🎉 🎉 Check it out at {{ .GitURL }}/releases/tag/{{ .Tag }} '
+    message_template: '📢📢 New Version *{{.Version}}* is released 🎉 🎉\n\nMore detailed changes are <{{ .GitURL }}/blob/{{ .Tag }}/CHANGELOG.md|here>.\nThe provider should already be available to be used directly, but you can manually download the supported plugin at {{ .GitURL }}/releases/tag/{{ .Tag }}\n\n Note: The provider is still `alpha` version'
     channel: '#lapp-cloud-deployments'
     username: 'terraform-provider-sapcc'
 
