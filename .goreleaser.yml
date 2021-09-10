@@ -29,8 +29,8 @@ announce:
   slack:
     enabled: true
     message_template: '{{.Version}} is out!'
-    channel: '#lapp-cloud-cicd'
-    username: 'terraform-provider-sapcc-release'
+    channel: '#lapp-cloud-deployments'
+    username: 'terraform-provider-sapcc'
     icon_emoji: '🎉'
 
 archives:
