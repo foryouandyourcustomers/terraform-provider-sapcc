@@ -26,10 +26,11 @@ type Client struct {
 	buildURL          func(buildCode string) string
 	deployURL         func(deployCode string) string
 	deployProgressURL func(deployCode string) string
+	clientUseragent   string
 }
 
 // NewClient -
-func NewClient(baseURL, authToken string) (*Client, error) {
+func NewClient(providerVersion, baseURL, authToken string) (*Client, error) {
 	if baseURL == "" {
 		return nil, errors.New("baseURL can not be empty")
 	}
@@ -39,6 +40,7 @@ func NewClient(baseURL, authToken string) (*Client, error) {
 	}
 
 	c := Client{
+		clientUseragent:   fmt.Sprintf("terraform-provider-sapcc/%s", providerVersion),
 		HTTPClient:        &http.Client{Timeout: 60 * time.Second},
 		AuthToken:         authToken,
 		BaseURL:           baseURL,
@@ -62,7 +64,7 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 	request.Header = http.Header{
 		"Authorization": []string{c.AuthToken},
 		"Content-Type":  []string{"application/json"},
-		"User-Agent":    []string{"terraform-provider-sapcc/alpha"},
+		"User-Agent":    []string{c.clientUseragent},
 	}
 
 	logger.Debug("Sending request", hclog.Fmt("%+v", request))
