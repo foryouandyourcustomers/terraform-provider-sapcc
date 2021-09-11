@@ -5,7 +5,7 @@ on:
     branches:
       - master
 jobs:
-  golangci:
+  Lint:
     name: lint
     runs-on: ubuntu-latest
     steps:

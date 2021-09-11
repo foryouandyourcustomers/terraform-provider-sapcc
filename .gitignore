@@ -37,3 +37,7 @@ vendor
 
 **/.tests
 /examples/.tests/
+
+*.envrc
+
+node_modules

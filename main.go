@@ -12,8 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
+var (
+	// this is supplied by the goreleaser - check .goreleaser.yml
+	version = "0.0.0"
+)
+
 func main() {
-	err := tfsdk.Serve(context.Background(), provider.New, tfsdk.ServeOpts{
+	err := tfsdk.Serve(context.Background(), func() tfsdk.Provider {
+		return provider.New(version)
+	}, tfsdk.ServeOpts{
 		Name: "sapcc",
 	})
 	if err != nil {

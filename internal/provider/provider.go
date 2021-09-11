@@ -6,9 +6,8 @@ import (
 	"os"
 	"terraform-provider-sapcc/internal/client"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -20,12 +19,15 @@ var logger = hclog.New(&hclog.LoggerOptions{
 
 const defaultAPIBaseURL = "https://portalrotapi.hana.ondemand.com/v2/subscriptions"
 
-func New() tfsdk.Provider {
-	return &provider{}
+func New(version string) tfsdk.Provider {
+	return &provider{
+		version: version,
+	}
 }
 
 // provider describes the data is passed along the context and is available to the resources
 type provider struct {
+	version    string
 	configured bool
 	client     *client.Client
 }
@@ -129,7 +131,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 			))
 	}
 
-	httpClient, err := client.NewClient(fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID), authToken)
+	httpClient, err := client.NewClient(p.version, fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID), authToken)
 
 	if err != nil {
 		resp.Diagnostics.Append(
