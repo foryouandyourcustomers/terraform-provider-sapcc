@@ -14,7 +14,7 @@ func TestAccResourceDeployment_Basic(t *testing.T) {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 
@@ -61,7 +61,7 @@ func TestAccResourceDeployment_FailedDeployment(t *testing.T) {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 
@@ -94,7 +94,7 @@ resource "sapcc_deployment" "deployment" {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 

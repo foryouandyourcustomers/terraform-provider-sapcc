@@ -26,7 +26,7 @@ func TestAccDataBuild_Basic(t *testing.T) {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 
@@ -68,7 +68,7 @@ func TestAccDataBuild_FailedBuilds(t *testing.T) {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 
@@ -98,7 +98,7 @@ data "sapcc_build" "build_doesnt_exist" {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 
@@ -128,7 +128,7 @@ data "sapcc_build" "build_unauth" {
 terraform {
   required_providers {
     sapcc = {
-      version = "~> 0.0.0"
+      version = "~> 0.0.1"
       source  = "fyayc/sapcc"
     }
 

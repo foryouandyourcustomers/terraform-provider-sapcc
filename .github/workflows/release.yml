@@ -6,9 +6,10 @@ env:
 on:
   push:
     branches:
-      - chore/publish
+      - master
+      - beta
 jobs:
-  goreleaser:
+  Release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
