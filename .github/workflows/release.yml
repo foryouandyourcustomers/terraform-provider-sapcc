@@ -46,7 +46,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm install @semantic-release/git conventional-changelog-conventionalcommits semantic-release-slack-bot -D
-          npm ci
 
       - name: Start Release
         env:
