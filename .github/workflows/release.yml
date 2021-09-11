@@ -5,8 +5,8 @@ env:
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - chore/publish
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -33,28 +33,28 @@ jobs:
         uses: goreleaser/goreleaser-action@v2.7.0
         with:
           version: latest
-          args: release --rm-dist
+          args: release --rm-dist --skip-publish
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
-
-      - uses: olegtarasov/get-tag@v2.1
-        id: tagName
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
         with:
-          tagRegex: "v(.*)"
-          tagRegexGroup: 1
+          node-version: '13'
 
-      - name: Release Announce
-        uses: edge/simple-slack-notify@master
-        if: success()
-        with:
-          channel: '#lapp-cloud-deployments'
-          username: 'terraform-provider-sapcc'
-          text: '📢 New Version Released 📢'
-          color: 'good'
-          fields: |
-            [{ "title": "Version", "value": "*${{ steps.tagName.outputs.tag }}*" }, {"title": "Release", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/releases/tag/${{ steps.tagName.outputs.tag }}" },{"title": "Changelog", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/${{ steps.tagName.outputs.tag }}/CHANGELOG.md" },{ "title": "Timestamp", "value": "${Date.now()}", "short": true }]
+      - name: Install dependencies
+        run: |
+          npm install @semantic-release/git conventional-changelog-conventionalcommits semantic-release-slack-bot -D
+          npm ci
+
+      - name: Start Release
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          GIT_AUTHOR_NAME: 'release-bot'
+          GIT_AUTHOR_EMAIL: 'release-bot@registry.terraform.io'
+          GIT_COMMITTER_NAME: 'release-bot'
+          GIT_COMMITTER_EMAIL: 'release-bot@registry.terraform.io'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: npx semantic-release
