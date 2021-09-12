@@ -37,6 +37,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          go install github.com/goreleaser/goreleaser@latest
           npm install @semantic-release/exec @semantic-release/git @semantic-release/changelog conventional-changelog-conventionalcommits semantic-release-slack-bot -D
 
       - name: Start Release
