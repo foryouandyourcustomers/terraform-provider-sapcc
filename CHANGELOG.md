@@ -1,3 +1,12 @@
+## [1.0.0-beta.2](https://github.com/tckb/terraform-provider-sapcc/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2021-09-12)
+
+
+### Bug Fixes
+
+* **ci:** Adding missing dependencies ([08c58e1](https://github.com/tckb/terraform-provider-sapcc/commit/08c58e1a42e836f83a4d9f05264836a8ffaaa4bc)), closes [#16](https://github.com/tckb/terraform-provider-sapcc/issues/16)
+* **ci:** Installing goreleaser ([752e45f](https://github.com/tckb/terraform-provider-sapcc/commit/752e45fc9fb3bb0e668ece221674edac1dc0f32f))
+* **ci:** merging goreleaser to sem-version releaser ([594b022](https://github.com/tckb/terraform-provider-sapcc/commit/594b022c1fd72df6eac3166c0a029ce29b6f4308))
+
 ## 1.0.0-beta.1 (2021-09-12)
 
 
