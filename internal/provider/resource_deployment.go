@@ -69,8 +69,11 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 			"strategy": {
 				Description: "The strategy used for this deployment.",
 				Type:        types.StringType,
-				Required:    true,
-				Computed:    false,
+				Computed:    true,
+				Optional:    true,
+				Validators: []tfsdk.AttributeValidator{
+					ValueMustBeOneOf("ROLLING_UPDATE", "RECREATE"),
+				},
 			},
 			"environment_code": {
 				Description: "The environment code of the environment of the deployment.",
@@ -92,6 +95,9 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 						return false, nil
 					}, "Changes in environment code will trigger new deployment", ""),
 				},
+				Validators: []tfsdk.AttributeValidator{
+					ValueMustMatchRegex("^(s|p|d)[0-9]+"),
+				},
 			},
 			"created_timestamp": {
 				Description: "Build start timestamp in UTC.",
@@ -108,8 +114,11 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 			"database_update_mode": {
 				Description: "The database update mode for the deployment.",
 				Type:        types.StringType,
-				Required:    true,
-				Computed:    false,
+				Computed:    true,
+				Optional:    true,
+				Validators: []tfsdk.AttributeValidator{
+					ValueMustBeOneOf("NONE", "UPDATE", "INITIALIZE"),
+				},
 			},
 			"scheduled_timestamp": {
 				Description: "Timestamp when the deployment was initially scheduled.",
