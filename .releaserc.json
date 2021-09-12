@@ -25,7 +25,7 @@
       "@semantic-release/github",
       {
         "assets": [
-          "dist/**"
+          "dist/terraform-provider-sapcc*"
         ]
       }
     ],
@@ -35,7 +35,7 @@
         "assets": [
           "CHANGELOG.md"
         ],
-        "message": "chore(release): Release \uD83D\uDE80 ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        "message": "chore(release): Bump ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
     [
