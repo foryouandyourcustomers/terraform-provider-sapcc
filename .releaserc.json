@@ -22,6 +22,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "RELEASE_VERSION=${nextRelease.version} make release"
+      }
+    ],
+    [
       "@semantic-release/github",
       {
         "assets": [

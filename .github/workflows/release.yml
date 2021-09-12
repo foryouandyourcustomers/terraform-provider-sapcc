@@ -30,15 +30,6 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2.7.0
-        with:
-          version: latest
-          args: release --skip-publish
-        env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
@@ -55,6 +46,6 @@ jobs:
           GIT_COMMITTER_NAME: 'release-bot'
           GIT_COMMITTER_EMAIL: 'release-bot@registry.terraform.io'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
         run: npx semantic-release

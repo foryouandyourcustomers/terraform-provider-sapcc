@@ -1,5 +1,4 @@
 before:
-
   hooks:
     - go mod tidy
 
@@ -10,7 +9,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X main.version={{ .Version }}'
+      - '-s -w -X main.version={{ .Env.RELEASE_VERSION }}'
     goos:
       - linux
       - darwin
@@ -22,14 +21,14 @@ builds:
     ignore:
       - goos: darwin
         goarch: '386'
-    binary: '{{ .ProjectName }}_v{{ .Version }}'
+    binary: '{{ .ProjectName }}_v{{ .Env.RELEASE_VERSION }}'
 
 archives:
   - format: zip
-    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: '{{ .ProjectName }}_{{ .Env.RELEASE_VERSION }}_{{ .Os }}_{{ .Arch }}'
 
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  name_template: '{{ .ProjectName }}_{{ .Env.RELEASE_VERSION }}_SHA256SUMS'
   algorithm: sha256
 
 signs:
