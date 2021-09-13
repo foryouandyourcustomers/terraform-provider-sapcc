@@ -69,8 +69,8 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 			"strategy": {
 				Description: "The strategy used for this deployment.",
 				Type:        types.StringType,
-				Computed:    true,
-				Optional:    true,
+				Required:    true,
+				Computed:    false,
 				Validators: []tfsdk.AttributeValidator{
 					ValueMustBeOneOf("ROLLING_UPDATE", "RECREATE"),
 				},
@@ -114,8 +114,8 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 			"database_update_mode": {
 				Description: "The database update mode for the deployment.",
 				Type:        types.StringType,
-				Computed:    true,
-				Optional:    true,
+				Required:    true,
+				Computed:    false,
 				Validators: []tfsdk.AttributeValidator{
 					ValueMustBeOneOf("NONE", "UPDATE", "INITIALIZE"),
 				},
