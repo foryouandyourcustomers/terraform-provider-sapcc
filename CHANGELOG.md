@@ -1,3 +1,10 @@
+### [1.0.1](https://github.com/tckb/terraform-provider-sapcc/compare/v1.0.0...v1.0.1) (2021-09-13)
+
+
+### Bug Fixes
+
+* **api:** Re-enforcing the required variables ([#19](https://github.com/tckb/terraform-provider-sapcc/issues/19)) ([5234fb5](https://github.com/tckb/terraform-provider-sapcc/commit/5234fb5ce0aa44c44bb54176bdd01e00ba01c42e)), closes [#18](https://github.com/tckb/terraform-provider-sapcc/issues/18)
+
 ## 1.0.0 (2021-09-12)
 
 
