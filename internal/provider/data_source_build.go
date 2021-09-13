@@ -118,21 +118,21 @@ type dataSourceBuild struct {
 
 func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
 	if !ds.provider.configured {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				"Provider not configured",
-				"The provider hasn't been configured before apply, "+
-					"likely because it depends on an unknown value from another resource. "+
-					"This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-			))
+		resp.Diagnostics.AddError(
+			"Provider not configured",
+			"The provider hasn't been configured before apply, "+
+				"likely because it depends on an unknown value from another resource. "+
+				"This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
+		)
 
 		return
 	}
 
 	var buildRequest models.Build
 	// TODO: try using GetAttribute instead?
-	for _, d := range req.Config.Get(ctx, &buildRequest) {
-		resp.Diagnostics.Append(d)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &buildRequest)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -142,11 +142,10 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 	logger.Debug("buildResponse: ", hclog.Fmt(" %+v", buildResponse), " statusCode: ", hclog.Fmt("%s", st), " err: ", hclog.Fmt("%+v", err))
 
 	if err != nil {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Error fetching build %s", err),
-				"",
-			))
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error fetching build %s", err),
+			"",
+		)
 
 		return
 	}
@@ -154,44 +153,41 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 	switch st {
 	case 404:
 
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Build '%s' not found", buildCode),
-				"",
-			))
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Build '%s' not found", buildCode),
+			"",
+		)
 
 		return
 	case 401:
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id'", buildCode),
-				"",
-			))
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unauthorized, credentials invalid for build '%s', please verify your 'auth_token' and 'subscription_id'", buildCode),
+			"",
+		)
 
 		return
 	case 403:
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
-				"",
-			))
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Forbidden, can not access build '%s'", buildCode),
+			"",
+		)
 
 		return
 	case 200:
 		break
 	default:
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
-				"",
-			))
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unexpected http status %d for build '%s' from upstream api; won't continue. expected 200 ", st, buildCode),
+			"",
+		)
 
 		return
 	}
 
 	// Set state
-	for _, d := range resp.State.Set(ctx, &buildResponse) {
-		resp.Diagnostics.Append(d)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &buildResponse)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 }

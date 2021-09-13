@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// track the deployment progress every xxx mins
 const trackProgressTimeSecs = 30
 
 type resourceDeploymentType struct{}
@@ -208,33 +207,35 @@ type resourceDeployment struct {
 // Create a new resource
 func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
 	if !rs.provider.configured {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				"Provider not configured",
-				"The provider hasn't been configured before apply,"+
-					" likely because it depends on an unknown value from another resource."+
-					" This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-			))
+		resp.Diagnostics.AddError(
+			"Provider not configured",
+			"The provider hasn't been configured before apply,"+
+				" likely because it depends on an unknown value from another resource."+
+				" This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
+		)
 
 		return
 	}
 
 	// Retrieve values from plan
 	var plan models.Deployment
-	for _, d := range req.Config.Get(ctx, &plan) {
-		resp.Diagnostics.Append(d)
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err, deployResponse := createNewDeployment(rs.provider.client, &resp.Diagnostics, &plan)
+	deployResponse := createNewDeployment(rs.provider.client, &resp.Diagnostics, &plan)
 
-	if err {
+	if resp.Diagnostics.HasError() {
 		resp.State.Set(ctx, &plan)
 		return
 	}
 
-	for _, d := range resp.State.Set(ctx, deployResponse) {
-		resp.Diagnostics.Append(d)
+	resp.Diagnostics.Append(resp.State.Set(ctx, deployResponse)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 }
@@ -255,9 +256,9 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 
 	} else {
 
-		err, state := fetchDeployment(state.Code.Value, rs.provider.client, &resp.Diagnostics)
+		state := fetchDeployment(state.Code.Value, rs.provider.client, &resp.Diagnostics)
 
-		if err {
+		if resp.Diagnostics.HasError() {
 			return
 		}
 
@@ -272,17 +273,18 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 			return
 		}
 
-		dErr := handleDeploymentDiags(state.BuildCode.Value, status, &resp.Diagnostics)
+		handleDeploymentDiags(state.BuildCode.Value, status, &resp.Diagnostics)
 
-		if dErr {
+		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		state.ProgressPercentage = progress.ProgressPercentage
 		state.Status = progress.DeployStatus
 
-		for _, d := range resp.State.Set(ctx, &state) {
-			resp.Diagnostics.Append(d)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -295,18 +297,22 @@ func (rs resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResourc
 	// TODO: should we re-create/update deployment on minor updates?
 	var plan, state models.Deployment
 
-	for _, d := range req.Plan.Get(ctx, &plan) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	for _, d := range req.State.Get(ctx, &state) {
-		resp.Diagnostics = append(resp.Diagnostics, d)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	// Setting the planned updates to state! the drifted attributes will be updated during a refresh
-	for _, d := range resp.State.Set(ctx, plan) {
-		resp.Diagnostics.Append(d)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 }
@@ -318,35 +324,30 @@ func (rs resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResourc
 	resp.State.RemoveResource(ctx)
 }
 
-func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *models.Deployment) (bool, *models.Deployment) {
+func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *models.Deployment) *models.Deployment {
 	deployResponse, st, err := client.CreateDeployment(plan)
 
 	if err != nil {
-
 		// this may be mean that the strategy of ROLLING_UPDATE might not work,
 		// we can ask the practitioners to look at others
 		if strings.Contains(err.Error(), "Unable to deploy build with rolling update") && plan.Strategy.Value == "ROLLING_UPDATE" {
-			diags.Append(
-				diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment: %s", err),
-					"It's possible the previous deployment might have been interrupted and can not recover, "+
-						"the strategy 'ROLLING_UPDATE' might not work. May be try 'RECREATE' instead?",
-				))
+			diags.AddError(fmt.Sprintf("Error creating deployment: %s", err),
+				"It's possible the previous deployment might have been interrupted and can not recover, "+
+					"the strategy 'ROLLING_UPDATE' might not work. May be try 'RECREATE' instead?",
+			)
 
-			return true, deployResponse
+			return deployResponse
 		}
 
-		diags.Append(
-			diag.NewErrorDiagnostic(fmt.Sprintf("Error creating deployment %s", err),
-				"",
-			))
+		diags.AddError(fmt.Sprintf("Error creating deployment %s", err), "")
 
-		return true, deployResponse
+		return deployResponse
 	}
 
-	er := handleDeploymentDiags(plan.BuildCode.Value, st, diags)
+	handleDeploymentDiags(plan.BuildCode.Value, st, diags)
 
-	if er {
-		return true, deployResponse
+	if diags.HasError() {
+		return deployResponse
 	}
 
 	deployStatus := deployResponse.Status.Value
@@ -362,20 +363,17 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 		progress, status, err := client.GetDeploymentProgress(deployCode)
 
 		if err != nil {
-			diags.Append(
-				diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment progress %s", err),
-					"",
-				))
+			diags.AddError(fmt.Sprintf("Error fetching deployment progress %s", err), "")
+			return deployResponse
 
-			return true, deployResponse
 		}
 
 		logger.Debug("Deploying progress: ", progress)
 
-		er = handleDeploymentDiags(plan.BuildCode.Value, status, diags)
+		handleDeploymentDiags(plan.BuildCode.Value, status, diags)
 
-		if er {
-			return true, deployResponse
+		if diags.HasError() {
+			return deployResponse
 		}
 
 		deployResponse.ProgressPercentage = progress.ProgressPercentage
@@ -385,21 +383,18 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 	}
 
 	if deployStatus != "DEPLOYED" {
-		diags.Append(
-			diag.NewErrorDiagnostic(fmt.Sprintf("Build wasn't successfully deployed; status is %s", deployStatus),
-				"",
-			))
 
-		return true, deployResponse
+		diags.AddError(fmt.Sprintf("Build wasn't successfully deployed; status is %s", deployStatus), "")
+		return deployResponse
 	}
 
 	// deployment is now created
 	// let's fill in the rest of the data
-	er, deployment := fetchDeployment(deployResponse.Code.Value, client, diags)
+	deployment := fetchDeployment(deployResponse.Code.Value, client, diags)
 
-	if er {
-		return true, deployResponse
+	if diags.HasError() {
+		return deployResponse
 	}
 
-	return false, deployment
+	return deployment
 }
