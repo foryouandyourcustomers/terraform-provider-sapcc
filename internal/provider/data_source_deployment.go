@@ -157,13 +157,12 @@ type dataSourceDeployment struct {
 
 func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
 	if !ds.provider.configured {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				"Provider not configured",
-				"The provider hasn't been configured before apply, "+
-					"likely because it depends on an unknown value from another resource. "+
-					"This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-			))
+		resp.Diagnostics.AddError(
+			"Provider not configured",
+			"The provider hasn't been configured before apply, "+
+				"likely because it depends on an unknown value from another resource. "+
+				"This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
+		)
 
 		return
 	}
@@ -171,104 +170,91 @@ func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourc
 	// Declare struct that this function will set to this data source's state
 	var deploymentRequest models.Deployment
 
-	for _, d := range req.Config.Get(ctx, &deploymentRequest) {
-		resp.Diagnostics.Append(d)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &deploymentRequest)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err, deployment := fetchDeployment(deploymentRequest.Code.Value, ds.provider.client, &resp.Diagnostics)
+	deployment := fetchDeployment(deploymentRequest.Code.Value, ds.provider.client, &resp.Diagnostics)
 
-	if err {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Set state
-	for _, d := range resp.State.Set(ctx, &deployment) {
-		resp.Diagnostics.Append(d)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &deployment)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 }
 
-func fetchDeployment(deployCode string, client *client.Client, diags *diag.Diagnostics) (bool, *models.Deployment) {
+func fetchDeployment(deployCode string, client *client.Client, diags *diag.Diagnostics) *models.Deployment {
 	deployResponse, st, err := client.GetDeployment(deployCode)
-	sendErr := true
 
 	if err != nil {
-
-		diags.Append(
-			diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment %s", err),
-				"",
-			))
-
+		diags.AddError(fmt.Sprintf("Error fetching deployment %s", err), "")
 	}
 
-	sendErr = handleDeploymentDiags(deployCode, st, diags)
+	handleDeploymentDiags(deployCode, st, diags)
 
-	if !sendErr {
+	if !diags.HasError() {
 		progress, st, err := client.GetDeploymentProgress(deployCode)
 
 		if err != nil {
-			diags.Append(
-				diag.NewErrorDiagnostic(fmt.Sprintf("Error fetching deployment progress %s", err), ""))
+			diags.AddError(fmt.Sprintf("Error fetching deployment progress %s", err), "")
+			return deployResponse
 
-			return sendErr, deployResponse
 		}
 
-		sendErr = handleDeploymentDiags(deployCode, st, diags)
+		handleDeploymentDiags(deployCode, st, diags)
 
-		if !sendErr {
+		if !diags.HasError() {
 			deployResponse.ProgressPercentage = progress.ProgressPercentage
 			deployResponse.Status = progress.DeployStatus
 		}
 	}
 
-	return sendErr, deployResponse
+	return deployResponse
 }
 
-func handleDeploymentDiags(deployCode string, st int, diags *diag.Diagnostics) bool {
+func handleDeploymentDiags(deployCode string, st int, diags *diag.Diagnostics) {
 	switch st {
 	case 400:
-		diags.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Bad Request got 400 for code '%s'; Is the environment busy with another deployment in-progress?", deployCode),
-				"",
-			))
+		diags.AddError(
+			fmt.Sprintf("Bad Request got 400 for code '%s'; Is the environment busy with another deployment in-progress?", deployCode),
+			"",
+		)
 
 	case 404:
-
-		diags.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Deployment or progress not found; code '%s'; Check logs or report it provider developer", deployCode),
-				"",
-			))
+		diags.AddError(
+			fmt.Sprintf("Deployment or progress not found; code '%s'; Check logs or report it provider developer", deployCode),
+			"",
+		)
 
 	case 401:
-		diags.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Unauthorized, credentials invalid for code '%s', please verify your 'auth_token' and 'subscription_id'", deployCode),
-				"",
-			))
+		diags.AddError(
+			fmt.Sprintf("Unauthorized, credentials invalid for code '%s', please verify your 'auth_token' and 'subscription_id'", deployCode),
+			"",
+		)
 
 	case 403:
-		diags.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Forbidden, can not access deployment with code '%s'", deployCode),
-				"",
-			))
+		diags.AddError(
+			fmt.Sprintf("Forbidden, can not access deployment with code '%s'", deployCode),
+			"",
+		)
 
 	case 200:
-		return false
+		return
 
 	case 201:
-		return false
+		return
 
 	default:
-		diags.Append(
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Unexpected http status %d for code '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
-				"",
-			))
+		diags.AddError(
+			fmt.Sprintf("Unexpected http status %d for code '%s' from upstream api; won't continue. expected 200 ", st, deployCode),
+			"",
+		)
 	}
-
-	return true
 }
