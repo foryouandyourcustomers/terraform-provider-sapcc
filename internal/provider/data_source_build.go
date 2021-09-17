@@ -3,12 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
-	"terraform-provider-sapcc/internal/models"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 type dataSourceBuildType struct{}
@@ -128,15 +128,13 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 		return
 	}
 
-	var buildRequest models.Build
-	// TODO: try using GetAttribute instead?
-	resp.Diagnostics.Append(req.Config.Get(ctx, &buildRequest)...)
-
+	attr, diags := req.Config.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("code"))
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	buildCode := buildRequest.Code.Value
+	buildCode := attr.(types.String).Value
 
 	buildResponse, st, err := ds.provider.client.GetBuild(buildCode)
 	logger.Debug("buildResponse: ", hclog.Fmt(" %+v", buildResponse), " statusCode: ", hclog.Fmt("%s", st), " err: ", hclog.Fmt("%+v", err))

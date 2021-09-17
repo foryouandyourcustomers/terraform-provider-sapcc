@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 type dataSourceDeploymentType struct{}
@@ -167,16 +168,15 @@ func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourc
 		return
 	}
 
-	// Declare struct that this function will set to this data source's state
-	var deploymentRequest models.Deployment
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &deploymentRequest)...)
-
+	attr, diags := req.Config.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("code"))
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	deployment := fetchDeployment(deploymentRequest.Code.Value, ds.provider.client, &resp.Diagnostics)
+	deployCode := attr.(types.String).Value
+
+	deployment := fetchDeployment(deployCode, ds.provider.client, &resp.Diagnostics)
 
 	if resp.Diagnostics.HasError() {
 		return
