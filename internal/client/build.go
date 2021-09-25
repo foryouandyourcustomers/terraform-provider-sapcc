@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"terraform-provider-sapcc/internal/models"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -62,7 +61,7 @@ func (c *Client) GetBuild(buildCode string) (*models.Build, int, error) {
 				build.Properties = properties
 
 			default:
-				logger.Debug("Unexpected data received from build response", hclog.Fmt(" k=%s v=%s, ignoring", k, v))
+				c.logger.With("buildCode", buildCode).Debug("Unexpected data received from build response {", k, v, "}")
 			}
 		}
 	}

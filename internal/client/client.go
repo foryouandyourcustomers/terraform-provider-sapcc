@@ -4,17 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
 )
-
-var logger = hclog.New(&hclog.LoggerOptions{
-	Name:  "sapcc-http-client",
-	Level: hclog.Debug,
-})
 
 // Client -
 type Client struct {
@@ -27,10 +23,11 @@ type Client struct {
 	deployURL         func(deployCode string) string
 	deployProgressURL func(deployCode string) string
 	clientUseragent   string
+	logger            hclog.Logger
 }
 
 // NewClient -
-func NewClient(providerVersion, baseURL, authToken string) (*Client, error) {
+func NewClient(providerVersion, baseURL, authToken string, logger hclog.Logger) (*Client, error) {
 	if baseURL == "" {
 		return nil, errors.New("baseURL can not be empty")
 	}
@@ -55,6 +52,7 @@ func NewClient(providerVersion, baseURL, authToken string) (*Client, error) {
 		deployProgressURL: func(deployCode string) string {
 			return fmt.Sprintf("%s/deployments/%s/progress", baseURL, deployCode)
 		},
+		logger: logger,
 	}
 
 	return &c, nil
@@ -67,23 +65,29 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 		"User-Agent":    []string{c.clientUseragent},
 	}
 
-	logger.Debug("Sending request", hclog.Fmt("%+v", request))
+	c.logger.Debug("Sending request", request)
 
 	res, err := c.HTTPClient.Do(request)
 
-	logger.Debug("Raw response", hclog.Fmt("%+v", res))
+	c.logger.Trace("Raw response", res)
 
 	if err != nil {
 		return nil, 0, err
 	}
-	defer res.Body.Close()
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			c.logger.Error("Error: ", err)
+		}
+	}(res.Body)
 
 	body, err := ioutil.ReadAll(res.Body)
 	jsonResponse := make(map[string]interface{})
 
 	if len(body) > 0 {
 		err = json.Unmarshal(body, &jsonResponse)
-		logger.Debug("Response ", hclog.Fmt(" %+v", jsonResponse), " statusCode: ", hclog.Fmt("%s", res.StatusCode))
+		c.logger.Trace("Response ", jsonResponse, " statusCode: ", res.StatusCode)
 
 		if jsonResponse["title"] == "Api Exception" {
 			err = fmt.Errorf("%s: %s", jsonResponse["message"], jsonResponse["detail"])
@@ -91,7 +95,7 @@ func (c *Client) doRequest(request *http.Request) (map[string]interface{}, int, 
 			return nil, res.StatusCode, err
 		}
 	} else {
-		logger.Warn("Response has no content length")
+		c.logger.Warn("Response has no content length")
 	}
 
 	// let the client handle all the errors

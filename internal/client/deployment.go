@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"terraform-provider-sapcc/internal/models"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -33,7 +32,7 @@ func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, int, 
 				if ok {
 					val = stringVal
 				} else {
-					logger.Error("Nonstring type received", hclog.Fmt("key:%s value:%s", k, v))
+					c.logger.Error("Nonstring type received", k, v)
 				}
 			}
 
@@ -84,7 +83,7 @@ func (c *Client) GetDeployment(deploymentCode string) (*models.Deployment, int, 
 
 				deployment.Cancelation = cancelation
 			default:
-				logger.Debug("Unexpected data received from build response", hclog.Fmt(" k=%s v=%s, ignoring", k, v))
+				c.logger.With("deploymentCode", deploymentCode).Debug("Unexpected data received from {", k, v, "}")
 			}
 		}
 	}
@@ -116,7 +115,7 @@ func (c *Client) CreateDeployment(plan *models.Deployment) (*models.Deployment, 
 		deploymentCode, ok := resp["code"].(string)
 
 		if !ok {
-			logger.Error("Unexpected data received, expected 'code' to be string: response", hclog.Fmt("response %s", resp))
+			c.logger.Error("Unexpected data received, expected 'code' to be string: response", resp)
 			return nil, statusCode, err
 		}
 
