@@ -8,13 +8,12 @@ import (
 	"terraform-provider-sapcc/internal/models"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
-
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 const trackProgressTimeSecs = 30
@@ -197,11 +196,13 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 func (r resourceDeploymentType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
 	return resourceDeployment{
 		provider: *(p.(*provider)),
+		logger:   mainLogger.Named("rsrc_deployment"),
 	}, nil
 }
 
 type resourceDeployment struct {
 	provider provider
+	logger   hclog.Logger
 }
 
 // Create a new resource
@@ -226,7 +227,7 @@ func (rs resourceDeployment) Create(ctx context.Context, req tfsdk.CreateResourc
 		return
 	}
 
-	deployResponse := createNewDeployment(rs.provider.client, &resp.Diagnostics, &plan)
+	deployResponse := rs.createNewDeployment(rs.provider.client, &resp.Diagnostics, &plan)
 
 	if resp.Diagnostics.HasError() {
 		resp.State.Set(ctx, &plan)
@@ -318,13 +319,13 @@ func (rs resourceDeployment) Update(ctx context.Context, req tfsdk.UpdateResourc
 }
 
 // Delete resource
-func (rs resourceDeployment) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (rs resourceDeployment) Delete(ctx context.Context, _ tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
 	// There isn't anything to clean up on the server side, the old deployment is already created and doesn't need any cleanup
 	// In-future, there might be some cleanups here
 	resp.State.RemoveResource(ctx)
 }
 
-func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *models.Deployment) *models.Deployment {
+func (rs resourceDeployment) createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *models.Deployment) *models.Deployment {
 	deployResponse, st, err := client.CreateDeployment(plan)
 
 	if err != nil {
@@ -368,7 +369,7 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 
 		}
 
-		logger.Debug("Deploying progress: ", progress)
+		rs.logger.With("deploymentCode", deployCode).Info("Deploying progress ", progress.ProgressPercentage, "%")
 
 		handleDeploymentDiags(plan.BuildCode.Value, status, diags)
 
@@ -379,7 +380,9 @@ func createNewDeployment(client *client.Client, diags *diag.Diagnostics, plan *m
 		deployResponse.ProgressPercentage = progress.ProgressPercentage
 		deployStatus = progress.DeployStatus.Value
 
-		logger.Info("Deploying buildcode#", hclog.Fmt("%s %s (%f)", deployCode, progress.DeployStatus.Value, progress.ProgressPercentage.Value))
+		rs.logger.
+			With("deploymentCode", deployCode).
+			Debug(" deploy progress ", progress.ProgressPercentage.Value, " deploy status", progress.DeployStatus.Value)
 	}
 
 	if deployStatus != "DEPLOYED" {

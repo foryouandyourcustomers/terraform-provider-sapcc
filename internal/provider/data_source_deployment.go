@@ -6,6 +6,8 @@ import (
 	"terraform-provider-sapcc/internal/client"
 	"terraform-provider-sapcc/internal/models"
 
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -146,14 +148,16 @@ func (r dataSourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, di
 	}, nil
 }
 
-func (r dataSourceDeploymentType) NewDataSource(ctx context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (r dataSourceDeploymentType) NewDataSource(_ context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
 	return dataSourceDeployment{
 		provider: *(p.(*provider)),
+		logger:   mainLogger.Named("ds_deployment"),
 	}, nil
 }
 
 type dataSourceDeployment struct {
 	provider provider
+	logger   hclog.Logger
 }
 
 func (ds dataSourceDeployment) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {

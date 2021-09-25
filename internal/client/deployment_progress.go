@@ -34,7 +34,7 @@ func (c *Client) GetDeploymentProgress(deploymentCode string) (*models.DeployPro
 			case "percentage":
 				progress.ProgressPercentage = types.Number{Value: big.NewFloat(v.(float64))}
 			default:
-				logger.Debug("GetDeploymentProgress: Skipping", k, v)
+				c.logger.With("deploymentCode", deploymentCode).Debug("skipping {", k, v, "}")
 			}
 		}
 	}

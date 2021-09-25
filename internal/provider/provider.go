@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var logger = hclog.New(&hclog.LoggerOptions{
+var mainLogger = hclog.New(&hclog.LoggerOptions{
 	Name:  "sapcc-provider",
 	Level: hclog.Debug,
 })
@@ -131,7 +131,12 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 			))
 	}
 
-	httpClient, err := client.NewClient(p.version, fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID), authToken)
+	httpClient, err := client.NewClient(
+		p.version,
+		fmt.Sprintf("%s/%s", apiBaseURL, subscriptionID),
+		authToken,
+		mainLogger.Named("client"),
+	)
 
 	if err != nil {
 		resp.Diagnostics.Append(
@@ -145,7 +150,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 }
 
 // GetResources - Defines provider resources
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
 		"sapcc_deployment": resourceDeploymentType{},
 	}, nil

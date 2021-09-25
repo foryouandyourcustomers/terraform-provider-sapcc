@@ -106,14 +106,16 @@ func (r dataSourceBuildType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 	}, nil
 }
 
-func (r dataSourceBuildType) NewDataSource(ctx context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (r dataSourceBuildType) NewDataSource(_ context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
 	return dataSourceBuild{
 		provider: *(p.(*provider)),
+		logger:   mainLogger.Named("ds_build"),
 	}, nil
 }
 
 type dataSourceBuild struct {
 	provider provider
+	logger   hclog.Logger
 }
 
 func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
@@ -137,7 +139,7 @@ func (ds dataSourceBuild) Read(ctx context.Context, req tfsdk.ReadDataSourceRequ
 	buildCode := attr.(types.String).Value
 
 	buildResponse, st, err := ds.provider.client.GetBuild(buildCode)
-	logger.Debug("buildResponse: ", hclog.Fmt(" %+v", buildResponse), " statusCode: ", hclog.Fmt("%s", st), " err: ", hclog.Fmt("%+v", err))
+	ds.logger.Debug("buildResponse: ", buildResponse, st, " err: ", err)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
