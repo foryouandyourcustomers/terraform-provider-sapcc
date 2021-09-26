@@ -21,7 +21,7 @@ Am experimental terraform provider for experimenting with SAP Commerce Cloud API
 $ make install
 ```
 
-You can install the provider locally by running `make install`, this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/fyayc/sapcc/<version>/<arch>`
+You can install the provider locally by running `make install`, this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/ foryouandyourcustomers/sapcc/<version>/<arch>`
 
 ## Testing the provider
 At the moment, there's no official testing framework (see [#issue 113](https://github.com/hashicorp/terraform-plugin-framework/issues/113)). The [helper](./helper) library provides a way for run acceptance tests against the mock server. The Mock server responses have been designed carefully based on the official API documentation and responses.
@@ -39,7 +39,7 @@ terraform {
   required_providers {
     sapcc = {
       version = "~> 0.0.2"
-      source  = "fyayc/sapcc"
+      source  = " foryouandyourcustomers/sapcc"
     }
   }
   required_version = "~> 1.0.3"
