@@ -1,3 +1,10 @@
+## [1.1.0](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/compare/v1.0.1...v1.1.0) (2021-09-26)
+
+
+### Features
+
+* **bin:** Releasing binaries for freebsd and windows ([#33](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/issues/33)) ([543a0e6](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/commit/543a0e68733bc2676f614cd10632a0bbc7458dd7)), closes [#26](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/issues/26)
+
 ### [1.0.1](https://github.com/tckb/terraform-provider-sapcc/compare/v1.0.0...v1.0.1) (2021-09-13)
 
 
