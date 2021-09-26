@@ -1,0 +1,69 @@
+name: Provider Bug
+description: Report a bug in the provider
+title: "[Provider Bug] ..."
+labels: ["bug"]
+assignees:
+  - ' '
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for reporting the bug, please fill-in the relevant details
+
+  - type: textarea
+    id: tf-version
+    attributes:
+      label: Terraform version
+      description: Run `terraform -v` to show the version.
+      placeholder: "Terraform v1.0.3 on darwin_amd64"
+    validations:
+      required: true
+
+  - type: textarea
+    id: provider-version
+    attributes:
+      label: Provider version
+      description: The version of provider you are on
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: OS
+    attributes:
+      label: Operating System
+      description: Which operating system you are using this provider on?
+      multiple: false
+      options:
+        - (GNU)Linux
+        - MacOs
+
+  - type: dropdown
+    id: Arch
+    attributes:
+      label: Architecture
+      description: The architecture of the operating system?
+      multiple: false
+      options:
+        - amd64
+        - '386'
+        - arm
+        - arm64
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Description of the bug
+      description: A clear and concise description of what the bug is, include any `crash.log, make sure you include all affected resource(s).
+      placeholder: Problem is...
+    validations:
+      required: true
+
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Complete logs including traces
+      description: Add a detailed copy of the terraform result include, enable trace logs as `TF_LOG=trace terraform plan/apply...`
+      render: shell
+    validations:
+      required: false
