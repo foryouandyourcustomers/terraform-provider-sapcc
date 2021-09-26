@@ -11,8 +11,10 @@ builds:
     ldflags:
       - '-s -w -X main.version={{ .Env.RELEASE_VERSION }}'
     goos:
-      - linux
-      - darwin
+    - freebsd
+    - windows
+    - linux
+    - darwin
     goarch:
       - amd64
       - '386'
