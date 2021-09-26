@@ -15,7 +15,7 @@ terraform {
   required_providers {
     sapcc = {
       version = "~> 0.0.1"
-      source  = "fyayc/sapcc"
+      source  = "foryouandyourcustomers/sapcc"
     }
 
   }
@@ -62,7 +62,7 @@ terraform {
   required_providers {
     sapcc = {
       version = "~> 0.0.1"
-      source  = "fyayc/sapcc"
+      source  = "foryouandyourcustomers/sapcc"
     }
 
   }
@@ -95,7 +95,7 @@ terraform {
   required_providers {
     sapcc = {
       version = "~> 0.0.1"
-      source  = "fyayc/sapcc"
+      source  = "foryouandyourcustomers/sapcc"
     }
 
   }

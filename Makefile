@@ -1,7 +1,7 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 HOST=registry.terraform.io
-NAMESPACE=fyayc
+NAMESPACE=foryouandyourcustomers
 NAME=sapcc
 BINARY=terraform-provider-${NAME}
 VERSION=0.0.1
@@ -32,6 +32,7 @@ clean:
 	go clean -testcache
 	rm -fr ./bin
 	rm -fr ./dist
+	rm -fr ./docs
 
 build:
 	@go mod tidy
