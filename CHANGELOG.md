@@ -1,3 +1,10 @@
+### [1.1.1](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/compare/v1.1.0...v1.1.1) (2021-09-27)
+
+
+### Bug Fixes
+
+* **api:** Removing 'Unknown' value validation ([#38](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/issues/38)) ([9dd83e9](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/commit/9dd83e9323f670bf895734e2c5c67a9a31953e43)), closes [#37](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/issues/37)
+
 ## [1.1.0](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/compare/v1.0.1...v1.1.0) (2021-09-26)
 
 
