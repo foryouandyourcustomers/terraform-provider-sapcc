@@ -54,7 +54,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 							stateVal := state.(types.String)
 							configVal := config.(types.String)
 
-							if !stateVal.Unknown && !stateVal.Null && !configVal.Unknown && !configVal.Null {
+							if !stateVal.Null && !configVal.Null {
 								if configVal.Value != stateVal.Value {
 									return true, nil
 								}
@@ -84,7 +84,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 							stateVal := state.(types.String)
 							configVal := config.(types.String)
 
-							if !stateVal.Unknown && !stateVal.Null && !configVal.Unknown && !configVal.Null {
+							if !stateVal.Null && !configVal.Null {
 								if configVal.Value != stateVal.Value {
 									return true, nil
 								}
@@ -252,7 +252,7 @@ func (rs resourceDeployment) Read(ctx context.Context, req tfsdk.ReadResourceReq
 
 	deployCode := state.Code
 
-	if deployCode.Unknown || deployCode.Null {
+	if deployCode.Null {
 		// this means the resource hasn't yet to be created - silently return
 
 	} else {

@@ -30,22 +30,13 @@ func (v ValueContainsInValidator) MarkdownDescription(_ context.Context) string 
 	return fmt.Sprintf("Value should be one of `'%s'`", strings.Join(v.values, ", "))
 }
 
-func (v ValueContainsInValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+func (v ValueContainsInValidator) Validate(_ context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
 	value, ok := req.AttributeConfig.(types.String) // see also attr.ValueAs() proposal
 
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Invalid value type",
 			fmt.Sprintf("received incorrect value type (%T) at path: %s", req.AttributeConfig, req.AttributePath),
-		)
-
-		return
-	}
-
-	if value.Unknown {
-		resp.Diagnostics.AddError(
-			"Unknown validation value",
-			fmt.Sprintf("received unknown value at path: %s", req.AttributePath),
 		)
 
 		return
@@ -77,22 +68,13 @@ func (v ValueRegexMatchValidator) MarkdownDescription(_ context.Context) string 
 	return fmt.Sprintf("Value should match regex `%s`", v.regex.String())
 }
 
-func (v ValueRegexMatchValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+func (v ValueRegexMatchValidator) Validate(_ context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
 	value, ok := req.AttributeConfig.(types.String) // see also attr.ValueAs() proposal
 
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Invalid value type",
 			fmt.Sprintf("received incorrect value type (%T) at path: %s", req.AttributeConfig, req.AttributePath),
-		)
-
-		return
-	}
-
-	if value.Unknown {
-		resp.Diagnostics.AddError(
-			"Unknown validation value",
-			fmt.Sprintf("received unknown value at path: %s", req.AttributePath),
 		)
 
 		return
