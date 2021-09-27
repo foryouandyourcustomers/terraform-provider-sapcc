@@ -76,21 +76,13 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	}
 
 	var apiBaseURL string
-	if config.APIBaseURL.Unknown || config.APIBaseURL.Null || config.APIBaseURL.Value == "" {
+	if config.APIBaseURL.Null || config.APIBaseURL.Value == "" {
 		apiBaseURL = defaultAPIBaseURL
 	} else {
 		apiBaseURL = config.APIBaseURL.Value
 	}
 
 	var subscriptionID string
-
-	if config.SubscriptionID.Unknown {
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				"Can not create the provider.",
-				"Cannot use unknown value as for 'subscription_id'",
-			))
-	}
 
 	if config.SubscriptionID.Null {
 		subscriptionID = os.Getenv("SAPCC_SUBSCRIPTION_ID")
@@ -107,15 +99,6 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	}
 
 	var authToken string
-
-	if config.AuthToken.Unknown {
-		// Cannot connect to client with an unknown value
-		resp.Diagnostics.Append(
-			diag.NewErrorDiagnostic(
-				"Can not create the provider.",
-				"Cannot use unknown value as 'auth_token'",
-			))
-	}
 
 	if config.AuthToken.Null {
 		authToken = os.Getenv("SAPCC_AUTH_TOKEN")
