@@ -1,36 +1,10 @@
+![experimental](https://camo.githubusercontent.com/8ad47215ae8b556345c074d2636cdf5e8a7f54068c110d1a1795501b43fab52e/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f7374617475732d6578706572696d656e74616c2d454141413332)
 # Terraform Provider for SAP Commerce Cloud API
 
-Am experimental terraform provider for experimenting with SAP Commerce Cloud API. The provider uses the [new plugin framework](https://github.com/hashicorp/terraform-plugin-framework) and is considered to be in the early stages of development. The provider is not ready to be used in the production as the upstream framework is still in `alpha` and there _will_ be breaking changes.
+An **experimental** terraform provider for interacting with SAP Commerce Cloud. The provider uses the [new plugin framework](https://github.com/hashicorp/terraform-plugin-framework) and is considered to be in the _early stages_ of development. Although, we try to keep the provider as stable as possible, the provider is **not** ready to be used in the production because the upstream framework is still in `alpha` and there _will_(!) be breaking changes.
 
-- A resource, and a data source (`internal/provider`),
-- Examples (`examples/`) and generated documentation (`docs/`)
-- WireMock's responses from commerce cloud apis are in `mocks`
+For any breaking changes, we expect them to be released as `pre-releases` (`*beta.*` tag) first and then finally released. 
 
-## Requirements
-
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.0.3
-- [Go](https://golang.org/doc/install) >= 1.17
-- [Golangci-lint](https://golangci-lint.run/usage/install)
-
-## Installing The Provider
-
-1. Clone the repository
-1. Enter the repository directory
-1. Install provider
-```sh
-$ make install
-```
-
-You can install the provider locally by running `make install`, this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/foryouandyourcustomers/sapcc/<version>/<arch>`
-
-## Testing the provider
-At the moment, there's no official testing framework (see [#issue 113](https://github.com/hashicorp/terraform-plugin-framework/issues/113)). The [helper](./helper) library provides a way for run acceptance tests against the mock server. The Mock server responses have been designed carefully based on the official API documentation and responses.
-
-To run the acceptance tests, you need to either provide terraform cli path with `TF_ACC_TERRAFORM_EXEC_PATH` or provide the version of terraform to run the tests against with `TF_ACC_TERRAFORM_VERSION`, this is mostly useful in case of running with CI.
-
-```shell
-TF_ACC_TERRAFORM_EXEC_PATH=/path/to/terraform make testacc   
-```
 
 ## Using the provider
 Simple & straight forward usage of the provider. Detailed examples can be found under (`examples/`) or in [*_test.go](./internal/provider/)
@@ -66,6 +40,41 @@ resource "sapcc_deployment" "deployment" {
   database_update_mode = "NONE"
 }
 ```
+
+
+## Building the provider
+
+### Structure of repo
+- Resources (`internal/provider`),
+- Examples (`examples/`) and generated documentation (`docs/`)
+- WireMock's responses from commerce cloud apis are in `mocks`
+
+### Requirements
+
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0.3
+- [Go](https://golang.org/doc/install) >= 1.17
+- [Golangci-lint](https://golangci-lint.run/usage/install)
+
+1. Clone the repository
+1. Enter the repository directory
+1. Install provider
+```sh
+$ make install
+```
+this installs the provider under `~/.terraform.d/plugins/registry.terraform.io/foryouandyourcustomers/sapcc/<version>/<arch>`
+
+## Testing the provider
+At the moment, there's no official testing framework (see [#issue 113](https://github.com/hashicorp/terraform-plugin-framework/issues/113)). The [helper](./helper) library temporarily fills the gap of acceptance tests. Once there is an official test suite for writing tests (unit and acceptance tests), this helper **will be** deprecated.  
+
+The repo comes with a mock server for emulating the SAP Commerce Cloud behaviour. The intension is to be use this server as a way to develop the provider instead of directly interacting with SAP Commerce cloud itself. For this case, the [mock responses](./mocks/mappings) have been designed carefully based on the official API documentation and responses.
+
+To run the acceptance tests, you need to either provide terraform cli path with `TF_ACC_TERRAFORM_EXEC_PATH` or provide the version of terraform to run the tests against with `TF_ACC_TERRAFORM_VERSION`, this is mostly useful in case of running with CI.
+
+```shell
+TF_ACC_TERRAFORM_EXEC_PATH=/path/to/terraform make testacc   
+```
+
+
 
 ## TODOs
 - [ ] Add unit tests
