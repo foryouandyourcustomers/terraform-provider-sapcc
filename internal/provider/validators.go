@@ -49,7 +49,7 @@ func (v ValueContainsInValidator) Validate(_ context.Context, req tfsdk.Validate
 	}
 
 	resp.Diagnostics.AddError(
-		fmt.Sprintf("Invalid value for '%s'", req.AttributePath.Steps()[0].(tftypes.AttributeName)),
+		fmt.Sprintf("Invalid value '%s' for '%s'", value.Value, req.AttributePath.Steps()[0].(tftypes.AttributeName)),
 		fmt.Sprintf("Expecting one of '%s'", strings.Join(v.values, ", ")),
 	)
 }
@@ -82,7 +82,7 @@ func (v ValueRegexMatchValidator) Validate(_ context.Context, req tfsdk.Validate
 
 	if !v.regex.MatchString(value.Value) {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Invalid value for '%s'", req.AttributePath.Steps()[0].(tftypes.AttributeName)),
+			fmt.Sprintf("Invalid value '%s' for '%s'", value.Value, req.AttributePath.Steps()[0].(tftypes.AttributeName)),
 			fmt.Sprintf("Value should match regex `%s`", v.regex.String()),
 		)
 	}
