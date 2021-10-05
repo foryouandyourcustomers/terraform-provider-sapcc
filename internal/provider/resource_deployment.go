@@ -63,6 +63,9 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 						return false, nil
 					}, "Changes in build code will trigger new deployment", ""),
 				},
+				Validators: []tfsdk.AttributeValidator{
+					ValueMustNotBeEmpty(),
+				},
 			},
 			"strategy": {
 				Description: "The strategy used for this deployment.",
@@ -70,7 +73,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Required:    true,
 				Computed:    false,
 				Validators: []tfsdk.AttributeValidator{
-					ValueMustBeOneOf("ROLLING_UPDATE", "RECREATE"),
+					ValueMustNotBeEmpty(), ValueMustBeOneOf("ROLLING_UPDATE", "RECREATE"),
 				},
 			},
 			"environment_code": {
@@ -94,7 +97,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 					}, "Changes in environment code will trigger new deployment", ""),
 				},
 				Validators: []tfsdk.AttributeValidator{
-					ValueMustMatchRegex("^(s|p|d)[0-9]+"),
+					ValueMustNotBeEmpty(), ValueMustMatchRegex("^(s|p|d)[0-9]+"),
 				},
 			},
 			"created_timestamp": {
@@ -115,7 +118,7 @@ func (r resourceDeploymentType) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Required:    true,
 				Computed:    false,
 				Validators: []tfsdk.AttributeValidator{
-					ValueMustBeOneOf("NONE", "UPDATE", "INITIALIZE"),
+					ValueMustNotBeEmpty(), ValueMustBeOneOf("NONE", "UPDATE", "INITIALIZE"),
 				},
 			},
 			"scheduled_timestamp": {
@@ -203,6 +206,10 @@ func (r resourceDeploymentType) NewResource(_ context.Context, p tfsdk.Provider)
 type resourceDeployment struct {
 	provider provider
 	logger   hclog.Logger
+}
+
+func (rs resourceDeployment) ImportState(_ context.Context, _ tfsdk.ImportResourceStateRequest, response *tfsdk.ImportResourceStateResponse) {
+	response.Diagnostics.AddWarning("Not supported yet", "Importing resource isn't supported, please add a feature request.")
 }
 
 // Create a new resource
