@@ -236,7 +236,7 @@ resource "sapcc_deployment" "deployment" {
 		g.It("Testing authorized access", func() {
 			g.Assert(errors).IsNotNil("Expecting errors not be nil")
 			g.Assert(len(errors)).IsNotZero("Expecting at least one error")
-			g.Assert(errors[0]).Equal("Unauthorized, credentials invalid for code '401', please verify your 'auth_token' and 'subscription_id'")
+			g.Assert(errors[0]).Equal("Empty Value received")
 		})
 	})
 }
