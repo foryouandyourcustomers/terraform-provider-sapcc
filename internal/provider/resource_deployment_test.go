@@ -125,7 +125,6 @@ resource "sapcc_deployment" "deployment" {
 }
 
 func TestAccResourceDeployment_VarInput(t *testing.T) {
-
 	g := Goblin(t)
 
 	resourceDeploy, _, _ := helper.ResourceTest(t, `
