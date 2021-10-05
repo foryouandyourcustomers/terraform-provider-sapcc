@@ -1,3 +1,10 @@
+### [1.1.2](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/compare/v1.1.1...v1.1.2) (2021-10-05)
+
+
+### Bug Fixes
+
+* **api:** Improving validators to fix issues reading inputs from variables ([#40](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/issues/40)) ([7c6793b](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/commit/7c6793b1da150138d33364373318a97d95e87b8c)), closes [#39](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/issues/39)
+
 ### [1.1.1](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/compare/v1.1.0...v1.1.1) (2021-09-27)
 
 
