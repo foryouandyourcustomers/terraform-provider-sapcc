@@ -24,7 +24,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.17 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/aws/aws-sdk-go v1.15.78 // indirect
-	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirectcontainerd
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/containerd/containerd v1.5.8 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -84,6 +84,6 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a // indirect
 	google.golang.org/grpc v1.33.2 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )
