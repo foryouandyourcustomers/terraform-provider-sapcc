@@ -1,3 +1,5 @@
+*Important note: This repo is not currently being developed. Feel free to fork and develop it*
+----
 ![experimental](https://img.shields.io/badge/status-alpha-important) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/foryouandyourcustomers/terraform-provider-sapcc) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/foryouandyourcustomers/terraform-provider-sapcc/release?label=release-action) ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/foryouandyourcustomers/terraform-provider-sapcc?include_prereleases&label=release&sort=semver) [![GitHub license](https://img.shields.io/github/license/foryouandyourcustomers/terraform-provider-sapcc)](https://github.com/foryouandyourcustomers/terraform-provider-sapcc/blob/master/LICENSE)  
 # Terraform Provider for SAP Commerce Cloud API
 
